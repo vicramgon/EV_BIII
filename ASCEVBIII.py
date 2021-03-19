@@ -3,7 +3,7 @@
 """
 Created on Mon Mar 15 19:12:22 2021
 
-@author: trialctor
+@author: yhatctor
 """
 
 """ 
@@ -20,22 +20,22 @@ import os                          # Create directories
 import shutil                      # Delete directories
 import colour
 
-def EOP1(cur, P, VP, Bcur, bounds, seed=None, F=0.5, CR=0.5, SIG=20, pm=None):
+def EOP1(cur, P, VP, Bcur, bounds, F=0.5, CR=0.5, SIG=20, pm=None, seed=None):
     np.random.seed(seed)
     # 1) DIFFERENTIAL EVOLUTION MUTATION
     p = P.shape[1]
     PM = 1/p if pm is None else pm
     r = P[np.random.choice(Bcur, 3, replace=False)]
-    trial = r[0] + F*(r[1]-r[2])
+    yhat = r[0] + F*(r[1]-r[2])
     
     # 2) DIFFERENTIAL EVOLUTION CROSSING
     delta = np.random.randint(0,p)
     M = np.array([True if np.random.random()<=CR else False for i in range(p)])
     M[delta] = True 
     
-    y = M.astype(np.float64)*trial + (~M).astype(np.float64)*P[cur]
+    y = M.astype(np.float64)*yhat + (~M).astype(np.float64)*P[cur]
     
-    # EOP1.3) GAUSSIAN MUTATION 
+    # EOP1.3) GAUSSIAN MUTATION AND REPARING
     for j, yj in enumerate(y):
         if np.random.random() < PM:
             y[j] = min(max(yj+ np.random.normal(0,(bounds[j][1]-bounds[j][0])/SIG),bounds[j][0]),bounds[j][1])
@@ -49,14 +49,14 @@ def EOP2(cur, P, VP, Bcur, bounds, seed=None, F=0.5, CR=0.5, pm=None, ETA=10):
     p = P.shape[1]
     PM = 1/p if pm is None else pm
     r = P[np.random.choice(Bcur, 5, replace=False)]
-    trial = r[0] + F*(r[1]-r[2]) + np.random.random()*(r[3]-r[4])
+    yhat = r[0] + F*(r[1]-r[2]) + np.random.random()*(r[3]-r[4])
     
     # 2) DIFFERENTIAL EVOLUTION CROSSING
     delta = np.random.randint(0,p)
     M = np.array([True if np.random.random()<=CR else False for i in range(p)])
     M[delta] = True 
     
-    y = M.astype(np.float64)*trial + (~M).astype(np.float64)*P[cur]
+    y = M.astype(np.float64)*yhat + (~M).astype(np.float64)*P[cur]
     
     # SBX MUTATION 
     for j, yj in enumerate(y):
@@ -160,7 +160,7 @@ def ASCEVBIII(Fgoals, vars_limits, N, G, T, eop=EOP1, seed=None, lambdaInput={'p
         np.random.shuffle(order)
         for cur in order:
             # GENERATE CHILD
-            y = eop(cur, P, VP, B[cur], bounds, seed)
+            y = eop(cur, P, VP, B[cur], bounds, seed=seed)
             vy =  np.array([fi(y) for fi in Fgoals])
             
             # UPDATE Z
