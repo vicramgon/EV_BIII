@@ -3,7 +3,7 @@
 """
 Created on Mon Mar 15 19:12:22 2021
 
-@author: victor
+@author: trialctor
 """
 
 """ 
@@ -19,59 +19,80 @@ import matplotlib.pyplot as plt    # Plot library
 import os                          # Create directories
 import shutil                      # Delete directories
 import colour
-import copy
 
-
-def EOP1(spi, P, VP, B, bounds, seed=None, F=0.5, CR=0.5, SIG=20):
+def EOP1(cur, P, VP, Bcur, bounds, seed=None, F=0.5, CR=0.5, SIG=20, pm=None):
+    np.random.seed(seed)
     # 1) DIFFERENTIAL EVOLUTION MUTATION
     p = P.shape[1]
-    r = P[np.random.choice(B[spi], 3, replace=False)]
-    vi = r[0] + F*(r[1]-r[2])
+    PM = 1/p if pm is None else pm
+    r = P[np.random.choice(Bcur, 3, replace=False)]
+    trial = r[0] + F*(r[1]-r[2])
     
     # 2) DIFFERENTIAL EVOLUTION CROSSING
     delta = np.random.randint(0,p)
-    M = np.array([True if np.random.random()<=0.5 else False for i in range(p)])
+    M = np.array([True if np.random.random()<=CR else False for i in range(p)])
     M[delta] = True 
     
-    y = M.astype(np.float64)*vi + (~M).astype(np.float64)*P[spi]
+    y = M.astype(np.float64)*trial + (~M).astype(np.float64)*P[cur]
     
     # EOP1.3) GAUSSIAN MUTATION 
     for j, yj in enumerate(y):
-        if np.random.random() < 1/p:
+        if np.random.random() < PM:
             y[j] = min(max(yj+ np.random.normal(0,(bounds[j][1]-bounds[j][0])/SIG),bounds[j][0]),bounds[j][1])
         else:
             y[j] = min(max(yj,bounds[j][0]),bounds[j][1])
     return y
 
-def EOP2(spi, P, VP, B, bounds, seed=None, Fpool=[0.3,0.5,0.7,0.9], pm=None, eta=10):
-    PM = 1/(P.shape[1]) if pm is None else pm
-    M = np.random.randint(0,3)
-    F = np.random.choice(Fpool)
-    y = P[spi]
-    if(M==0):    #M1
-        r = P[np.random.choice(B[spi], 2, replace=False)]
-        y =  P[spi] + F*(r[0]-r[1])
-    elif (M==1): #M2
-        r = P[np.random.choice(B[spi], 4, replace=False)]
-        y = P[spi] + np.random.random()*(r[0]-r[1]) + F*(r[2]-r[3])
-    else:        #M3
-        r = P[np.random.choice(B[spi], 5, replace=False)]
-        y = r[0] + np.random.random()*(r[1]-r[2]) + F*(r[3]-r[4])
-  
-    # EOP1.3) MUTATION 
+def EOP2(cur, P, VP, Bcur, bounds, seed=None, F=0.5, CR=0.5, pm=None, ETA=10):
+    np.random.seed(seed)
+    # 1) DIFFERENTIAL EVOLUTION MUTATION
+    p = P.shape[1]
+    PM = 1/p if pm is None else pm
+    r = P[np.random.choice(Bcur, 5, replace=False)]
+    trial = r[0] + F*(r[1]-r[2]) + np.random.random()*(r[3]-r[4])
+    
+    # 2) DIFFERENTIAL EVOLUTION CROSSING
+    delta = np.random.randint(0,p)
+    M = np.array([True if np.random.random()<=CR else False for i in range(p)])
+    M[delta] = True 
+    
+    y = M.astype(np.float64)*trial + (~M).astype(np.float64)*P[cur]
+    
+    # SBX MUTATION 
     for j, yj in enumerate(y):
         if np.random.random() < PM :
             mu =  np.random.random()
-            sigmaj = (2*mu)**(1/(eta+1)) if mu < 0.5 else 1 - (2 - 2*mu)**(1/(eta+1))
+            sigmaj = (2*mu)**(1/(ETA+1)) if mu < 0.5 else 1 - (2 - 2*mu)**(1/(ETA+1))
             y[j] += sigmaj*(bounds[j][1] - bounds[j][0])
         
         if y[j] < bounds[j][0] or y[j] > bounds[j][1]:
-            y[j] = bounds[j][0] + np.random.random()*(bounds[j][1] - bounds[j][0])
+            y[j] = min(max(yj,bounds[j][0]),bounds[j][1])
+    return y
+
+
+def EOP3(cur, P, VP, Bcur, bounds, seed=None, e=2, CR=1, SIG=20, pm=None):
+    np.random.seed(seed)
+    # 1) DIFFERENTIAL EVOLUTION MUTATION
+    
+    p = P.shape[1]
+    PM = 1/p if pm is None else pm
+    r = P[np.random.choice(Bcur, e, replace=False)]
+    y = np.array([ r[np.random.randint(0,e)][j] for j in range(p)])
+    
+    
+    # EOP1.3) GAUSSIAN MUTATION 
+    for j, yj in enumerate(y):
+        if np.random.random() < PM:
+            y[j] = min(max(yj+ np.random.normal(0,(bounds[j][1]-bounds[j][0])/SIG),bounds[j][0]),bounds[j][1])
+        else:
+            y[j] = min(max(yj,bounds[j][0]),bounds[j][1])
     return y
     
 
-def ASCEVBIII(Fgoals, vars_limits, N, G, T, eop=EOP1, seed=None, outputDirPath='./results'):
+def ASCEVBIII(Fgoals, vars_limits, N, G, T, eop=EOP1, seed=None, lambdaInput={'path':'./input/lambdas.csv', 'delimiter':'j'}, outputDirPath='./results'):
+
     
+    ## SETTINGS & PARAMETERS
     if os.path.isdir(outputDirPath):
         shutil.rmtree(outputDirPath)
     os.mkdir(outputDirPath) 
@@ -79,26 +100,35 @@ def ASCEVBIII(Fgoals, vars_limits, N, G, T, eop=EOP1, seed=None, outputDirPath='
     bounds = [sorted(vl) for vl in vars_limits]
     p=len(bounds)
     m=len(Fgoals)
+    np.random.seed(seed)
+    
+    # INITIALIZATION
    
-    
-    
     # We generate N lambda vectors one for each subproblem and calculate
     # the distance between each two.
-    L = []
+    L = np.zeros((N, m), dtype=np.float64)
+    
+    if m == 2:
+        for i in range(N):
+            L[i] = (1-i/(N-1), i/(N-1))
+        del i
+    else:
+        readedL = np.genfromtxt(lambdaInput['path'], delimiter=lambdaInput['delimiter'])
+        L[:,:]= readedL[:N, :m]
+        del readedL
+        
+        
+    # We calculates the distances between each pair of lambda vectors
+    # and save in into a distance matrix D
     D = np.zeros((N,N), dtype=np.float64)
-   
     for i in range(N):
-        Li = (1-i/(N-1), i/(N-1))
-        L.append(Li)
         for j in range(i):
-            dij = np.linalg.norm([Li[0]- L[j][0], Li[1]- L[j][1]])
+            dij = np.linalg.norm(L[i]-L[j])
             D[i][j] = dij
             D[j][i] = dij
-    del Li
-    del dij
-    del j
     del i
-    
+    del j
+             
     # We calculate the vicinity for each subproblem taking the T nearest
     # lambda vectors to lambda_i
     B = [np.argpartition(D[i], T)[:T] for i in range(N)]
@@ -107,7 +137,6 @@ def ASCEVBIII(Fgoals, vars_limits, N, G, T, eop=EOP1, seed=None, outputDirPath='
     
     # We generate a random population in which each component of each individual
     # is between the corresponding bounds.
-    np.random.seed(seed)
     P = np.random.random([N, p]).astype(np.float64)
     #print(P);
     
@@ -129,15 +158,15 @@ def ASCEVBIII(Fgoals, vars_limits, N, G, T, eop=EOP1, seed=None, outputDirPath='
     for it in range(G-1):     
         order = np.array(range(N))
         np.random.shuffle(order)
-        for spi in order:
+        for cur in order:
             # GENERATE CHILD
-            y = eop(spi, P, VP, B, bounds, seed)
+            y = eop(cur, P, VP, B[cur], bounds, seed)
             vy =  np.array([fi(y) for fi in Fgoals])
             
             # UPDATE Z
             z = np.minimum(z, vy)
             
-            for j in B[spi]:
+            for j in B[cur]:
                 gtey = np.max([L[j][i]*abs(vy[i]-z[i]) for i in range(m)])
                 gtex = np.max([L[j][i]*abs(VP[j][i]-z[i]) for i in range(m)])
                 if gtey <= gtex:
