@@ -102,10 +102,6 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, seed=None, lambdaInput={'path':
 
     
     ## SETTINGS & PARAMETERS
-    if os.path.isdir(outputDirPath):
-        shutil.rmtree(outputDirPath)
-    os.mkdir(outputDirPath) 
-    
     searchSpace = [sorted(vl) for vl in searchSpace]
     p=len(searchSpace)
     m=len(goals)
