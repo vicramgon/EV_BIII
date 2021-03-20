@@ -125,7 +125,7 @@ for seed in [i+1 for i in range(10)]:
 '''
 
 # MOEA PARAMETERS
-N = 100; G = 100; T=8; eop=EOP2
+N = 200; G = 50; T=20; eop=EOP2
 
 # Color gradient for plots
 colors = list(colour.Color("blue").range_to(colour.Color("red"),G))
