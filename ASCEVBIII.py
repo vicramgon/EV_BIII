@@ -16,8 +16,7 @@
 '''
 
 import numpy as np                 # Math library
-import os                          # Create directories
-import shutil                      # Delete directories
+from copy import deepcopy          # For a real coping of objects
 
 
 '''
@@ -98,8 +97,27 @@ def EOP3(i, P, VP, Bi, searchSpace, seed=None, e=4, SIG=20, pm=None):
 # MOEA/D IMPLEMENTATION #
 #########################
 '''
-def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, seed=None, lambdaInput={'path':'./input/lambdas.csv', 'delimiter':'j'}, outputDirPath='./results'):
-
+def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, NDS=True, seed=None, lambdaInput={'path':'./input/lambdas.csv', 'delimiter':'j'}, outputDirPath='./results'):
+    def dominates(x, y):
+        nonlocal m
+        lessInAnyValue = False
+        for j in range(m):
+            if not(lessInAnyValue) and (x[j] < y[j]):
+                lessInAnyValue = True
+            if x[j] > y[j]:
+                return False
+            
+        return  lessInAnyValue
+    
+    def updateNDS(NDS_list, vi):
+        NDS_list_ = deepcopy(NDS_list)
+        for i,sol in enumerate(NDS_list):
+            if dominates(sol, vi):
+                return NDS_list
+            elif dominates(vi, sol):
+                NDS_list_[i] = None
+        NDS_list_.append(vi)
+        return list(filter(lambda x: x is not None, NDS_list_))
     
     ## SETTINGS & PARAMETERS
     searchSpace = [sorted(vl) for vl in searchSpace]
@@ -155,6 +173,14 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, seed=None, lambdaInput={'path':
     ## We initialize z vector with the best value of f1 and f2 in the population.
     z = np.apply_along_axis(np.min, 0, VP)
     
+    ## We initialize the non dominated solutions
+    if NDS:
+        NDS_list= []
+        for vi in VP:
+            NDS_list = updateNDS(NDS_list, vi)
+        del vi
+    
+    
     with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}gen0.out", "ab") as resFile:
         writeVP = np.zeros([N,m+1])
         writeVP[:,:-1] = VP
@@ -163,6 +189,8 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, seed=None, lambdaInput={'path':
     for it in range(G-1):     
         order = np.array(range(N))
         np.random.shuffle(order)
+       # P_ = deepcopy(P)
+      #  VP_ = deepcopy(VP)
         for cur in order:
             # GENERATE CHILD
             y = eop(cur, P, VP, B[cur], searchSpace, seed=seed)
@@ -171,14 +199,27 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, seed=None, lambdaInput={'path':
             # UPDATE Z
             z = np.minimum(z, vy)
             
+            # UPDATE NDS
+            if NDS:
+                NDS_list = updateNDS(NDS_list, vy)
+            
             for j in B[cur]:
                 gtey = np.max([L[j][i]*abs(vy[i]-z[i]) for i in range(m)])
                 gtex = np.max([L[j][i]*abs(VP[j][i]-z[i]) for i in range(m)])
+               # gtex = np.max([L[j][i]*abs(VP_[j][i]-z[i]) for i in range(m)])
                 if gtey <= gtex:
                     P[j] = y
                     VP[j] = vy
+                    # P_[j] = y
+                    # VP_[j] = vy
+            #P = deepcopy(P_); VP= deepcopy(VP_)
         
         with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}gen{it+1}.out", "ab") as resFile:
             writeVP = np.zeros([N,m+1])
             writeVP[:,:-1] = VP
             np.savetxt(resFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
+    if NDS:
+        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}nds.out", "ab") as ndsFile:
+            writeNDS = np.zeros([len(NDS_list),m+1])
+            writeNDS[:,:-1] = np.array(NDS_list)
+            np.savetxt(ndsFile, writeNDS, delimiter="\t", newline='\n', header='', footer='')
