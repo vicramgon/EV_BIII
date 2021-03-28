@@ -1,0 +1,33 @@
+\babel@toc {spanish}{}
+\contentsline {section}{\numberline {1}Introducción}{1}{section.1}%
+\contentsline {section}{\numberline {2}Metodología}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Funcionamiento general del algoritmo}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Datos de entrada}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Inicialización del algoritmo}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Desarrollo iterativo}{5}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}Algunas consideraciones}{7}{subsubsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.5}Final del algoritmo}{7}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Implementación}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Datos de entrada}{7}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Inicialización}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Desarrollo evolutivo (iterativo)}{9}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Reproducción}{9}{subsubsection.3.3.1}%
+\contentsline {subsubsection}{\numberline {3.3.2}Evaluación del descendiente}{13}{subsubsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.3}Actualización del punto de referencia}{13}{subsubsection.3.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.4}Actualización de los vecinos}{13}{subsubsection.3.3.4}%
+\contentsline {subsubsection}{\numberline {3.3.5}Actualización de \textit {NDS Set}}{13}{subsubsection.3.3.5}%
+\contentsline {subsubsection}{\numberline {3.3.6}Otras cuestiones}{13}{subsubsection.3.3.6}%
+\contentsline {section}{\numberline {4}Experimentación y resultados}{14}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Evaluación MOEA/D + EOP1 con ZDT3}{14}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Experimentación con 1OOOO ev.}{15}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Análisis de métricas para 10000 ev.}{18}{subsubsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.2}Evaluación MOEA/D + EOP2 con ZDT3}{23}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}Experimentación con 1OOOO ev.}{23}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}Análisis de métricas para 10000 ev.}{26}{subsubsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.3}Evaluación MOEA/D + EOP3 con ZDT3}{31}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Experimentación con 1OOOO ev.}{31}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Análisis de métricas para 10000 ev.}{34}{subsubsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.4}Comparativa final de los algoritmos}{39}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Conclusion final}{40}{section.5}%
+\contentsline {section}{\numberline {6}Extensión a problemas multiobjetivo.}{46}{section.6}%
+\contentsline {section}{\numberline {7}Conclusiones}{46}{section.7}%

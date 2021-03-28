@@ -25,15 +25,18 @@ from copy import deepcopy          # For a real coping of objects
 ######################
 '''
 
-def EOP1(i, P, VP, Bi, searchSpace, F=0.5, CR=0.5, SIG=20, pm=None, seed=None):
+def EOP1(i, P, VP, Bi, searchSpace, Fs=[0.5, 0.7], CRs=[0.5], SIG=20, pm=None, seed=None):
     # 1) DIFFERENTIAL EVOLUTION MUTATION
     p = P.shape[1]
     PM = 1/p if pm is None else pm
-    r = P[np.random.choice(Bi, 3, replace=False)]
-    yhat = r[0] + F*(r[1]-r[2])
+    F = np.random.choice(Fs)
+    
+    r = P[np.random.choice(Bi, 5, replace=(len(Bi) < 5))]
+    yhat = r[0] + F*(r[1]-r[2]) + np.random.random()*(r[3]-r[4])
     
     # 2) DIFFERENTIAL EVOLUTION CROSSING
     delta = np.random.randint(0,p)
+    CR = np.random.choice(CRs)
     M = np.array([True if np.random.random()<=CR else False for _ in range(p)])
     M[delta] = True 
     
@@ -42,8 +45,9 @@ def EOP1(i, P, VP, Bi, searchSpace, F=0.5, CR=0.5, SIG=20, pm=None, seed=None):
     # 3) GAUSSIAN MUTATION AND REPARING
     for j, yj in enumerate(y):
         if np.random.random() < PM:
-            y[j] = min(max(yj+ np.random.normal(0,(searchSpace[j][1]-searchSpace[j][0])/SIG),searchSpace[j][0]),searchSpace[j][1])
-        else:
+            y[j] = yj+ np.random.normal(0,(searchSpace[j][1]-searchSpace[j][0])/SIG)
+        
+        if y[j] < searchSpace[j][0] or y[j] > searchSpace[j][1]:
             y[j] = min(max(yj,searchSpace[j][0]),searchSpace[j][1])
     return y
 
@@ -51,7 +55,7 @@ def EOP2(i, P, VP, Bi, searchSpace, seed=None, F=0.5, CR=0.5, pm=None, ETA=10):
     # 1) DIFFERENTIAL EVOLUTION MUTATION
     p = P.shape[1]
     PM = 1/p if pm is None else pm
-    r = P[np.random.choice(Bi, 5, replace=False)]
+    r = P[np.random.choice(Bi, 5, replace=(len(Bi) < 5))]
     yhat = r[0] + F*(r[1]-r[2]) + np.random.random()*(r[3]-r[4])
     
     # 2) DIFFERENTIAL EVOLUTION CROSSING
@@ -74,7 +78,7 @@ def EOP2(i, P, VP, Bi, searchSpace, seed=None, F=0.5, CR=0.5, pm=None, ETA=10):
     return y
 
 
-def EOP3(i, P, VP, Bi, searchSpace, seed=None, e=4, SIG=20, pm=None):
+def EOP3(i, P, VP, Bi, searchSpace, seed=None, e=5, SIG=10, pm=None):
     p = P.shape[1]
     PM = 1/p if pm is None else pm
     
@@ -97,7 +101,7 @@ def EOP3(i, P, VP, Bi, searchSpace, seed=None, e=4, SIG=20, pm=None):
 # MOEA/D IMPLEMENTATION #
 #########################
 '''
-def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, NDS=True, seed=None, lambdaInput={'path':'./input/lambdas.csv', 'delimiter':'j'}, outputDirPath='./results'):
+def MOEAD(goals, searchSpace, N, G, T, eop=EOP1, updationsNumber=None, NDS=True, seed=None, lambdaInput=None, outputDirPath='./results'):
     def dominates(x, y):
         nonlocal m
         lessInAnyValue = False
@@ -123,7 +127,9 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, NDS=True, seed=None, lambdaInpu
     searchSpace = [sorted(vl) for vl in searchSpace]
     p=len(searchSpace)
     m=len(goals)
+    UN = N if updationsNumber is None else updationsNumber
     np.random.seed(seed)
+    
     
     # INITIALIZATION
    
@@ -131,7 +137,7 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, NDS=True, seed=None, lambdaInpu
     # the distance between each two.
     L = np.zeros((N, m), dtype=np.float64)
     
-    if m == 2:
+    if m == 2 and not (lambdaInput):
         for i in range(N):
             L[i] = (1-i/(N-1), i/(N-1))
         del i
@@ -181,11 +187,14 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, NDS=True, seed=None, lambdaInpu
         del vi
     
     
-    with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}gen0.out", "ab") as resFile:
-        writeVP = np.zeros([N,m+1])
-        writeVP[:,:-1] = VP
-        np.savetxt(resFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
-    
+   
+    with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}gen0.out", "wb") as resFile:
+        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}allGen.out", "wb") as allGenFile:
+            writeVP = np.zeros([N,m+1])
+            writeVP[:,:-1] = VP
+            np.savetxt(resFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
+            np.savetxt(allGenFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
+     
     for it in range(G-1):     
         order = np.array(range(N))
         np.random.shuffle(order)
@@ -203,23 +212,29 @@ def MOEAD(goals, searchSpace, N, G, T, eop=EOP3, NDS=True, seed=None, lambdaInpu
             if NDS:
                 NDS_list = updateNDS(NDS_list, vy)
             
-            for j in B[cur]:
+            updations = 0
+            for j in sorted(B[cur], key=(lambda x: np.random.random())):
                 gtey = np.max([L[j][i]*abs(vy[i]-z[i]) for i in range(m)])
                 gtex = np.max([L[j][i]*abs(VP[j][i]-z[i]) for i in range(m)])
                # gtex = np.max([L[j][i]*abs(VP_[j][i]-z[i]) for i in range(m)])
                 if gtey <= gtex:
                     P[j] = y
                     VP[j] = vy
+                    updations += 1
                     # P_[j] = y
                     # VP_[j] = vy
+                if updations >= UN:
+                    break
             #P = deepcopy(P_); VP= deepcopy(VP_)
         
-        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}gen{it+1}.out", "ab") as resFile:
-            writeVP = np.zeros([N,m+1])
-            writeVP[:,:-1] = VP
-            np.savetxt(resFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
+        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}gen{it+1}.out", "wb") as resFile:
+            with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}allGen.out", "ab") as allGenFile:
+                writeVP = np.zeros([N,m+1])
+                writeVP[:,:-1] = VP
+                np.savetxt(resFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
+                np.savetxt(allGenFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
     if NDS:
-        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}nds.out", "ab") as ndsFile:
+        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}nds.out", "wb") as ndsFile:
             writeNDS = np.zeros([len(NDS_list),m+1])
             writeNDS[:,:-1] = np.array(NDS_list)
             np.savetxt(ndsFile, writeNDS, delimiter="\t", newline='\n', header='', footer='')

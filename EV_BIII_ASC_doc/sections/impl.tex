@@ -1,0 +1,360 @@
+%\section{Implementación}
+
+
+\justify
+
+
+En este apartado describiremos la implementación concreta realizada de la metodología previamente propuesta, concretando cada una de las etapas y procesos. En el \hyperref[alg:1]{\textit{algoritmo 1}} se presenta el pseudocódigo del marco general de desarrollo, del algoritmo. En los puntos esta sección concretaremos cada una de las partes del mismo, dando los detalles de implementación correspondientes.\\
+
+\subsection{Datos de entrada}
+
+Como se propone en la metodología los datos de entrada corresponden a:\\
+
+\begin{itemize}
+    \item \textbf{Funciones objetivo}: Las funciones objetivo $f_1, \dots, f_m$  consideradas son dadas como una lista de longitud $m$ de funciones, que reciban como entrada un indivividuo (vector $p-dimensional$) y devuelvan una lista de valores reales correspondientes a la valoración del individuo respecto de la correspondiente función.\\
+\end{itemize}
+
+\noindent\begin{minipage}[H]{0.5\linewidth}
+\begin{itemize}
+    \item \textbf{El espacio de búsqueda $\Omega$}: Que establece para cada una de las variables los límites de variación (continua) de la variable. De forma que dichos límites se darán como una lista de longitud $p$ de pares ($x_{Lj}, x_{Uj}$) de valores reales. Dichos pares son ordenados para asegurar que $x_{Lj} \leq x_{Uj}$.\\
+     
+     \item \textbf{Número de subproblemas $N$}: Un entero que corresponde al número de subproblemas considerados, esto es el número de vectores de pesos $\boldsymbol{\lambda_i}$ y el tamaño considerado para la población.\\
+     
+     \item \textbf{Número de generaciones $G$}:  Un entero que corresponde al número de máximo de iteraciones llevadas a cabo por el algoritmo.\\
+    
+    \item \textbf{Número de vecinos $T$}: Un entero correspondiente al número de subproblemas, incluyéndose a sí mismo, que serán considerados parte de la vecindad.\\
+    
+\end{itemize} 
+
+
+
+
+\subsection{Inicialización}
+
+Durante la fase de inicialización se establecen los valores iniciales para:\\
+
+\begin{itemize}
+\item\textbf{ Vectores de pesos $(\boldsymbol{\lambda_1}, \dots, \boldsymbol{\lambda_N})$}, de forma que si el problema es bi-objetivo dichos vectores son generados utilizando la expresión $\boldsymbol{\lambda_i} = \left(\frac{i-1}{N-1}, \frac{N-i}{N-1} \right)$ con $i \in \{1, \dots, N\}$ para $i=1,\dots, N$. Si se desea es posible especificar un fichero en formato \textit{ASCII} del que se leerán las $N$ primeras lineas que deberán contener los vectores de pesos considerados.\\
+
+\end{itemize}
+
+\end{minipage} \hfill
+\begin{minipage}[H]{0.47\linewidth}
+    \begin{algorithm}[H]
+\SetAlgoLined
+ \textbf{Entrada}:
+ \begin{itemize}
+ 
+     \vspace{0.15cm}\item MOP: 
+     \begin{itemize}
+         \vspace{0.15cm}\item[] $\boldsymbol{F}=[f_1, \dots, f_m]$
+         \vspace{0.15cm}\item[] $\Omega =[(x_{L1}, x_{U1}), \dots, (x_{Lp}, x_{Up})]$
+     \end{itemize}
+     
+    \vspace{0.15cm}\item $N$: número de subproblemas
+     
+    \vspace{0.15cm}\item $G$: número de generaciones
+     
+    \vspace{0.15cm}\item $T$: número de vecinos
+
+    \vspace{0.15cm}\item $EOP$: operador evolutivo
+
+    \vspace{0.15cm}\item $UN$: Updations number
+
+    \vspace{0.15cm}\item $NDS$: Usar/no usar NDS.
+
+ \end{itemize}
+ 
+ \vspace{0.3cm}
+  
+ \textbf{Inicialización}:
+    \begin{itemize}
+        \vspace{0.15cm}\item $\boldsymbol{\lambda}$. Vectores de pesos $(\lambda_1, \dots, \lambda_N)$
+        \vspace{0.15cm}\item $B$. Vecindad de los subproblemas $[[B_{1,1}, \dots, B_{1,T}], \dots, [B_{N,1}, \dots, B_{N,T}] ]$
+        \vspace{0.15cm}\item P. Población ($\boldsymbol{I_1}, \dots, \boldsymbol{I_N}$)
+        \vspace{0.15cm}\item VP. Valoración de la población ($\boldsymbol{F}(P)$)
+        \vspace{0.15cm}\item $\boldsymbol{z}$. Punto de referencia $(z_1, \dots, z_m)$
+        \vspace{0.15cm}\item \textit{Conjunto de soluciones no dominadas (NDS Set)}. 
+    \end{itemize}
+    
+\vspace{0.3cm}
+  
+ \textbf{Actualización} (hasta el límite $G$):\\
+    \textit{Para $i=1, \dots, N$}
+        \begin{itemize}
+            \vspace{0.15cm}\item $\boldsymbol{y_i} \gets EOP(\boldsymbol{P_i})$
+            
+            \vspace{0.15cm}\item Evaluar $\boldsymbol{y}$ ($\boldsymbol{F}(\boldsymbol{y})$)
+            \vspace{0.15cm}\item Actualizar $\boldsymbol{z}$
+            \vspace{0.15cm}\item Actualizar soluciones vecinas de $i$.
+            \vspace{0.15cm}\item Actualizar NDS Set
+        \end{itemize}
+    
+     
+    \vspace{0.3cm} 
+    
+    \textbf{Salida}:
+    \begin{itemize}
+        \item Aproximación al frente de Pareto. (NDS Set)
+    \end{itemize}
+ \caption{Marco gral. del MOEA/D}
+ \label{alg:1}
+\end{algorithm}
+\end{minipage}\\
+
+\begin{itemize}
+
+\item \textbf{Vecindad de los subproblemas $B$}. Corresponde a una lista de listas que contienen los índices considerados dentro de la vecindad de un subproblema, de forma que para cada subproblema $i$ son considerados como vecinos los $T$ cuyos vectores asociados son más cercanos a $\boldsymbol{\lambda_i}$. Para ello se crea (temporalmente) un matriz de distancias $D_{N \times N}$ tal que cuya posición $i,j$ corresponde a la distancia euclídea entre $\boldsymbol{\lambda_i}$ y $\boldsymbol{\lambda_j}$. Una vez calculada dicha matriz, el vecindario de $i$ corresponde a los $T$ $j$ con menor $d_{ij}$.\\
+
+\item \textbf{Población $P = [\boldsymbol{I_1}, \dots, \boldsymbol{I_N}]$}. Se inicializa con valores aleatorios (dentro del espacio de búsqueda) para cada una de las variables de cada uno de los individuos. Para ello se genera una matriz $\hat{P}_{N \times p}$ de números aleatorios (entre $0$ y $1$). De forma que ahora $P$ es obtenida aplicando a cada elemento de cada columna la expresión $P_{ij}=\hat{P}_{ij} \left(x_{Uj} - x_{Lj}\right) + x_{Lj}$, obteniendo un número aleatorio entre $x_{Lj}$ y $x_{Uj}$. De forma que la población $P$ es almacenada como una matriz $P_{N \times p}$ en la que cada fila corresponde al individuo $\boldsymbol{P_i}$ asociado al problema $i$; y cada columna corresponde al valor de las características de dicho individuo (genotipo).\\
+
+\item \textbf{Valoración de la población $VP_{N \times m} = \boldsymbol{F}(P)$}. Es inicializada con la valoración de los individuos de $P$. Para ello a cada una de los individuos (filas) de $P$ son valorados según las funciones objetivo $f_1, \dots. f_m$, dando lugar a la matriz $VP$, en la que cada fila $i$ corresponde a las valoraciones del individuo $\boldsymbol{P_i}$ (fenotipo) y cada columna $j$ a la valoración de dicho individuo según $f_j$\\ 
+
+\item \textbf{Punto de referencia $\boldsymbol{z} = (z_1, \dots, z_m)$}. Corresponde al vector de los mejores valores encontrados para cada una de las funciones objetivo $f_1, \dots. f_m$. Teniendo en cuenta que inicialmente solo se tienen los individuos de $P$, cuyas valoraciones corresponden a $VP$, para la inicialización de $z$ basta coger el mínimo de cada columna de $VP$ que será el mejor (menor) valor encontrado hasta el momento).\\
+
+\item \textbf{Conjunto de soluciones no dominadas \textit{NDS Set}}. Corresponde al conjunto de vectores en el espacio de objetivos (valoraciones) que no son dominada por ninguna encontrada hasta el momento. Teniendo en cuenta que inicialmente solo se han encontrado las soluciones de $VP$ basta recorrer $VP$ y añadir \textit{NDS Set} aquellas que no son dominadas por ninguna otra. Esto es equivalente a tomar el inicialmente \textit{NDS Set} y realizar una actualización de \textit{NDS Set} con cada solución (vector fila) de $VP$.\\
+
+\end{itemize}
+
+\subsection{Desarrollo evolutivo (iterativo)}
+
+Una vez inicializado el algoritmo se lleva a cabo un proceso iterativo de evolución durante $G-1$ iteraciones (de forma que el algoritmo genera en total $G$ generaciones y realiza $G \cdot N$ evaluaciones. Durante cada una de las iteraciones del proceso evolutivo se lleva a cabo:
+
+\subsubsection{Reproducción}
+
+Consistente en la generación de los nuevos descendientes. Para ello, se pueden utilizar distintos operadores evolutivos con la condición de que devuelvan un único descendiente. Para una mayor generalidad, se propone que la función generadora de los descendientes $EOP$ sea dada al algoritmo también como entrada a fin de poder dar un marco general para la experimentación. En concreto la experimentación se llevará a cabo, tal y como se propone en la metodología con 3 operadores evolutivos (descritos en la metodología). Exponemos a continuación los detalles de implementación para cada uno de ellos.\\
+
+    \noindent\begin{minipage}{\textwidth}
+    
+        \begin{algorithm}[H]
+    \SetAlgoLined
+     \vspace{0.2cm}\textbf{Entrada}:
+    \begin{multicols}{2}
+     \begin{itemize}
+         \vspace{0.15cm}\item $i$: índice del individuo actual 
+         \vspace{0.15cm}\item $P$: Población (genotipos)
+         \vspace{0.15cm}\item $VP$: Valoración de la población (fenotipos)
+         \vspace{0.15cm}\item $B_i$: Índices de vecinos de $i$
+         \vspace{0.15cm}\item $\Omega$: Espacio de búsqueda.
+         \vspace{0.15cm}\item Parámetros : 
+            \begin{itemize}
+                \item $Fs$ : Pool de valores para $F$ 
+                \item $CR$ : Probabilidad de cruze 
+                \item $PM$ : Probabilidad de mutación
+                \item $SIG$ : Apertura de la mutación 
+            \end{itemize} 
+     \end{itemize}
+    \end{multicols}
+    
+    \begin{multicols}{2}
+     \vspace{0.2cm} \textbf{(1) Mutación de $\boldsymbol{P_i}$}: Vector mutante $\boldsymbol{\hat{y}}$.
+            \begin{enumerate}
+                \item $r_1, r_2, r_3, r_4, r_5 \in B_i$.
+                \item $\boldsymbol{\hat{y}} \gets \boldsymbol{P_{r1}} + F \cdot (\boldsymbol{P_{r2}} - \boldsymbol{P_{r3}}) + rand \cdot (\boldsymbol{P_{r2}} - \boldsymbol{P_{r3}}) $
+            \end{enumerate}
+            
+     \vspace{0.2cm} \textbf{(2) Cruce de $P_i$ con $\boldsymbol{\hat{y}}$}: 
+            \begin{enumerate}
+                \item $Cp \gets (\dots,  Cp_\delta=1, \dots) \in \{0,1\}^{p}$.
+                \item $y_j \gets Cp \odot \boldsymbol{\hat{y}} +  (\boldsymbol{1}^{(p)} - Cp) \odot \boldsymbol{P_i}
+                 $
+            \end{enumerate}
+            
+    \end{multicols}
+        
+    \begin{multicols}{2}
+    \vspace{0.2cm} \textbf{(3) Mutación de $\boldsymbol{y}$}:\\
+    Para $j = 1, \dots, dim(\boldsymbol{P_i})$\\
+            \begin{enumerate}
+                \item Si $rand \in [0,1] < PM $: 
+                \begin{enumerate}
+                    \item $\sigma_j \gets |x_{Uj} - x_{Lj}|/SIG$
+                    \item $y_j \gets y_j + rand \in \mathcal{N}(0, \sigma_j)$ 
+                \end{enumerate}
+            \end{enumerate}\columnbreak
+            
+        \vspace{0.2cm} \textbf{(4) Reparación de $\boldsymbol{y}$}: \\
+        Para $j = 1, \dots, dim(\boldsymbol{P_i})$\\
+            \begin{enumerate}
+                \item $y_j \gets \min ( \max ( y_j , x_{Lj}), x_{Uj})$
+            \end{enumerate}
+    \end{multicols}
+       
+         \vspace{0.2cm}\textbf{Salida}: Descendiente $y \in \Omega$
+     \caption{Pseudocódigo EOP1}
+     \label{alg:2}
+    \end{algorithm}
+     \end{minipage}\\ \vspace{0.2cm}
+    
+    \noindent\textbf{EOP1}. Basado en DE + GP. En el \hyperref[alg:2]{\textit{algoritmo 2}} se presenta el pseudocódigo de la función que describimos a continuación. El operador evolutivo EOP1 toma un individuo $P_i$ y genera un desciendente $\boldsymbol{y}$ a partir de él, de forma que:\\
+    
+    \begin{enumerate}
+        \item Realiza una primera mutación de $\boldsymbol{P_i}$ (procendente de DE) de forma que se genera un vector mutante a partir de cinco vectores escogidos del entorno de $P_i$. En concreto se escogen al azar cinco elementos del vecindario de $i$ (correspondientes a los subproblemas $r1$, $r2$. $r3$, $r4$ y $r5$, con reemplazamiento si es necesario) y se genera el vector mutante aplicando la expresión correspondiente a partir de los vectores asociados a los subproblemas que son justamente las filas correspondientes a los índices $r1$, $r2$ y $r3$ de la población (matriz) $P$, de forma que el vector mutante corresponde a $\boldsymbol{\hat{y}} = P_{r1} + F (P_{r2} - P_{r3})$. Con $F$ un parámetro de la función establecido por el usuario (típicamente $0.5$). \\
+        
+        \item Realiza el cruce del individuo $\boldsymbol{P_i}$ con el vector mutante $\boldsymbol{\hat{y}}$. Para ello se genera un vector de números aleatorios booleanos $\boldsymbol{CP}$ (crossing points) (con probabilidad $CR$, dada por el usuario, típicamente $0.5$), esto es un vector de valores $0$ y $1$, de forma que para garantizar que el vector resultante contiene al menos un elemento del vector mutante, una posición aleatoria de $CP$ es fijada a $1$. Ahora para el vector resultante (descendiente) se toman  de $\boldsymbol{\hat{y}}$ aquellas componentes en las que $CP_j = 1$ y de $\boldsymbol{P_i}$ aquellas que son $0$, esto es justamente (en operaciones vectoriales) $\boldsymbol{y} = \boldsymbol{CP} \odot \boldsymbol{\hat{y}} +  (\boldsymbol{1}^{(p)} - \boldsymbol{CP}) \odot \boldsymbol{P_i}$ (con $\boldsymbol{1}^{(p)}$ el vector $p$-dimensional con todas sus componentes  $1$).\\
+        
+        \item Realiza una perturbación gaussiana en algunas de las componentes del descendiente. De forma que para cada una de las componentes se sortea aleatoriamente con probabilidad $PM$ (dada por el usuario o en su ausencia $1/p$, con $p$ el número de componentes de los individuos) y en caso favorable dicha componente $y_j$ es perturbada añadiéndole una cantidad aleatoria obtenida de una distribución normal (gaussiana) de media 0 y desviación estándar $\frac{|x_{Uj} - x_{Lj}|}{SIG}$ (donde $SIG$ corresponde a un parámetro ajustable por el usuario, típicamente 20). \\
+        
+        \item Finalmente cada una de las componentes de $y$ que se encuentren fuera del espacio de búsqueda son ajustadas a la cota correspondiente, equivalente a aplicar la función $y_j = min(max(y_j ,x_{Lj}),$ $x_{Uj})$ sobre cada componente.\\
+        
+    \end{enumerate}
+
+\noindent
+    \begin{minipage}{\textwidth}
+    \begin{algorithm}[H]
+    \SetAlgoLined
+     \vspace{0.2cm}\textbf{Entrada}:
+    \begin{multicols}{2}
+    
+     \begin{itemize}
+         \vspace{0.15cm}\item $i$: índice del individuo actual 
+         \vspace{0.15cm}\item $P$: Población (genotipos)
+         \vspace{0.15cm}\item $VP$: Valoración de la población (fenotipos)
+         \vspace{0.15cm}\item $B_i$: Índices de vecinos de $i$
+         \vspace{0.15cm}\item $\Omega$: Espacio de búsqueda.
+         \vspace{0.15cm}\item Parámetros : $F, CR, PM, \eta$
+     \end{itemize}
+     \end{multicols}
+    
+    \begin{multicols}{2}
+     \vspace{0.2cm} \textbf{(1) Mutación de $P_i$}: Vector mutante $\boldsymbol{\hat{y}}$.
+            \begin{enumerate}
+                \item $r_1, r_2, r_3, r_4, r_5 \in B_i$.
+                \item $\boldsymbol{\hat{y}} \gets \boldsymbol{P_{r1}} + F \cdot (\boldsymbol{P_{r2}} - \boldsymbol{P_{r3}}) + rand \cdot(\boldsymbol{P_{r4}} - \boldsymbol{P_{r5}}) $
+            \end{enumerate}
+            
+     \vspace{0.2cm} \textbf{(2) Cruce de $P_i$ con $\boldsymbol{\hat{y}}$}: 
+            \begin{enumerate}
+                \item $Cp \gets (\dots,  Cp_\delta=1, \dots) \in \{0,1\}^{p}$.
+                \item $y_j \gets Cp \odot \boldsymbol{\hat{y}} +  (\boldsymbol{1}^{(p)} - Cp) \odot \boldsymbol{P_i}
+                 $
+            \end{enumerate}
+            \columnbreak
+    
+    \vspace{0.2cm} \textbf{(3)Mutación de $\boldsymbol{y}$}:\\ 
+    
+    Para $j = 1, \dots, dim(\boldsymbol{P_i})$:\\
+            \begin{enumerate}
+                \item Si $rand \in [0,1] < PM $: 
+                \begin{enumerate}
+                    \item $\mu \gets rand \in [0,1] $
+                    \item Si $\mu < 0.5$ : $\sigma_j \gets (2 \mu)^{\frac{1}{\eta+1}}$
+                    \item Si no : $\sigma_j \gets 1 -  (2 - 2 \mu)^{\frac{1}{\eta+1}}$
+                    \item $y_j \gets y_j + \sigma_j$ 
+                \end{enumerate}
+            \end{enumerate}
+    
+    \end{multicols}
+    
+    \textbf{(4) Reparación $y$}: \\
+            Para $j = 1, \dots, dim(\boldsymbol{P_i})$: $y_j \gets \min ( \max ( y_j , x_{Lj}), x_{Uj})$ 
+       
+         \vspace{0.2cm}\textbf{Salida}:Descendiente $y \in \Omega$
+     \caption{Pseudocódigo EOP2}
+     \label{alg:3}
+    \end{algorithm}
+    \end{minipage}\\  \vspace{0.2cm}
+
+
+\noindent\textbf{EOP2}. Basado en DE + SBX. En el \hyperref[alg:3]{\textit{algoritmo 3}} se presenta el pseudocódigo de la función que describimos a continuación. El operador evolutivo EOP2 toma un individuo $P_i$ y genera un desciendente $\boldsymbol{y}$ a partir de él, de forma que:\\
+    
+    \begin{enumerate}
+        \item Realiza una primera mutación de $\boldsymbol{P_i}$ (procendente de DE) de forma que se genera un vector mutante a partir de cinco vectores escogidos del entorno de $P_i$. En concreto se escogen al azar 5 elementos del vecindario de $i$ (correspondientes a los subproblemas $r1$, $r2$, $r3$, $r4$, y $r5$) y se genera el vector mutante aplicando la expresión correspondiente (mostrada en la metodología a partir de los vectores asociados a los subproblemas, correspondiente a $\boldsymbol{\hat{y}} = P_{r1} + F (P_{r2} - P_{r3}) + rand  (P_{r4} - P_{r5})$. Con $F$ un parámetro de la función establecido por el usuario (típicamente $0.5$) y $rand$ un número aleatorio entre $0$ y $1$. \\
+        
+        \item Realiza el cruce del individuo $\boldsymbol{P_i}$ con el vector mutante $\boldsymbol{\hat{y}}$ utilizando el cruce típico de DE, detallado en EOP1\\
+        
+        \item Realiza una mutación inspirada en el operador SBX (Simulated Binary Crossover). De forma que para cada una de las componentes se sortea aleatoriamente con probabilidad $PM$ (dada por el usuario o en su ausencia $1/p$, con $p$ el número de componentes de los individuos) y en caso favorable dicha componente $y_j$ es perturbada añadiéndole una cantidad obtenida mediante la expresión inferior, de forma que $PM$, $\eta$ son parámetros (ajustables) de entrada. $$y_j = \left\lbrace \begin{array}{ll}
+            y_j + \sigma_{k} \cdot (x_{Uj}-y_{Lj}) & \textit{si } rand < PM \\
+            y_j & e.o.c
+        \end{array} \right., \sigma_k = \left\lbrace \begin{array}{ll}
+            (2 \cdot rand)^{\frac{1}{\eta+1}}-1 & \textit{si } rand < 0.5 \\
+            1 - (2 - 2 \cdot rand)^{\frac{1}{\eta+1}} & e.o.c
+        \end{array} \right.$$ 
+        
+        \item Finalmente cada una de las componentes de $y$ que se encuentren fuera del espacio de búsqueda son ajustadas a la cota correspondiente, equivalente a EOP1.\\
+        
+    \end{enumerate}
+    
+    \noindent\begin{minipage}{\textwidth}
+        \begin{algorithm}[H]
+        \SetAlgoLined
+         \vspace{0.2cm}\textbf{Entrada}:
+        \begin{multicols}{2}
+        
+         \begin{itemize}
+             \vspace{0.15cm}\item $i$: índice del individuo actual 
+             \vspace{0.15cm}\item $P$: Población (genotipos)
+             \vspace{0.15cm}\item $VP$: Valoración de la población (fenotipos)
+             \vspace{0.15cm}\item $B_i$: Índices de vecinos de $i$
+             \vspace{0.15cm}\item $\Omega$: Espacio de búsqueda.
+             \vspace{0.15cm}\item Parámetros : $PM, SIG$
+         \end{itemize}
+         \end{multicols}
+        
+        \begin{multicols}{2}
+         \vspace{0.3cm} \textbf{(1) Cruce de $\boldsymbol{P_i}$}: 
+                \begin{enumerate}
+                    \item $S \gets \{r_1, \dots, r_\epsilon\} \subseteq B_i$
+                    \item Para $j = 1, \dots, dim(\boldsymbol{P_i})$: $y_j \gets (P_{rand \in S})_{j}$
+                \end{enumerate} 
+                
+                \vspace{0.3cm} \textbf{(3) Reparación $y$}:\\
+        Para $j = 1, \dots, N$: $y_j \gets \min ( \max ( y_j , x_{Lj}), x_{Uj})$
+                \columnbreak
+        
+        \vspace{0.3cm} \textbf{(2) Mutación de $\boldsymbol{y}$}:\\
+        Para $j = 1, \dots, dim(\boldsymbol{P_i})$\\
+                \begin{enumerate}
+                    \item Si $rand \in [0,1] < PM $: 
+                    \begin{enumerate}
+                        \item $\sigma_j \gets |x_{Uj} - x_{Lj}|/SIG$
+                        \item $y_j \gets y_j + rand \in \mathcal{N}(0, \sigma_j)$ 
+                    \end{enumerate}
+                \end{enumerate}
+        \end{multicols}
+        
+             \vspace{0.1cm}\textbf{Salida}:Descendiente $y \in \Omega$
+         \caption{Pseudocódigo EOP3}
+         \label{alg:4}
+        \end{algorithm}
+        \end{minipage}\\ \vspace{0.2cm}
+
+\noindent\textbf{EOP3}. Basado en UX + GP. En el \hyperref[alg:4]{\textit{algoritmo 4}} se presenta el pseudocódigo de la función que describimos a continuación. El operador evolutivo EOP3 toma un individuo $\boldsymbol{P_i}$ y genera un descendiente $\boldsymbol{y}$ a partir de él, de forma que:\\
+    
+    \begin{enumerate}
+        \item Se realiza un cruce uniforme de forma que se eligen de entre el vecindario de $i$ $epsilon$ (parámetro de entrada) vecinos aleatoriamente (con igual probabilidad) $r1, r2, \dots, r_\epsilon$. Ahora el descendiente $y$ es generado de forma que el valor de cada componente (cromosoma) es elegido aleatoriamente entre los valores de dicha componente de los vecinos seleccionados.\\
+        
+        \item Realiza una mutación gaussiana de forma análoga a EOP1.\\
+        
+        \item Finalmente cada una de las componentes de $y$ que se encuentren fuera del espacio de búsqueda son ajustadas a la cota correspondiente, equivalente a EOP1.\\
+        
+    \end{enumerate}
+
+\subsubsection{Evaluación del descendiente}
+
+Una vez generado el sucesor éste es evaluado respecto a cada uno de los objetivos almacenándose en un vector $\boldsymbol{vy}$ las valoraciones tal que la posición $k$ de dicho vector corresponde a $f_k(\boldsymbol{y})$.\\
+
+\subsubsection{Actualización del punto de referencia}
+
+Como $\boldsymbol{z}$ debe mantener en todo momento los mejores valores obtenidos por alguno de los individuos, es necesario actualizar aquellas componentes en las que $\boldsymbol{vy}$ sea mejor (menor) que $\boldsymbol{z}$, de forma que para cada componente $j=1, \dots, m$, se actualiza $\boldsymbol{z}$ con $z_j = \min(z_j, vy_j)$.\\
+
+\subsubsection{Actualización de los vecinos}
+
+Equivalente, en cierto modo, al proceso de selección de los nuevos individuos en otros algoritmos evolutivos, de forma que el descendiente sustituirá al individuo considerado si y sólo si es mejor que él, teniendo en cuenta la formulación de Tchebycheff si $g^{te}(\boldsymbol{y}|\boldsymbol{\lambda_i},z) \leq g^{te}(\boldsymbol{P_i}|\boldsymbol{\lambda_i},z)$. Téngase en cuenta que esta solución también puede ser mejor para los problemas vecinos, por ello, estos también son actualizados siguiendo el mismo criterio. Para ello, para cada uno de los vecinos $j$ de $i$ ($B_i$) el elemento (fila) de la matriz $P$ es sustituido $\boldsymbol{y}$ si se cumple el criterio de Tchebycheff (actualizando consecuentemente $VP$). Recuérdese que $i \in B_i$ por tanto basta ejecutar la acción sobre el vecindario (sin hacerlo de forma separada para el propio individuo).\\
+
+La actualización de muchos de los vecinos puede llevar al algoritmo a una convergencia prematura (estancamiento) por ello se controla mediante el parámetro $UN$ el número máximo de actualizaciones (mediante un contador que es incrementado cada vez que se produce una actualización).\\
+
+\subsubsection{Actualización de \textit{NDS Set}}
+
+Para mantener en todo el momento la consistencia del conjunto cada vez que es generado un descendiente se actualiza el conjunto añadiendo la valoración asociada y eliminando las soluciones dominadas por ella, si procede. Para ello se recorre el conjunto de soluciones dominadas, comparando cada solución con $\boldsymbol{F}(\boldsymbol{y})$ en el momento en que se encuentre una que la domine, el proceso es abortado. En caso de que no se encuentre ninguna, se habrán ido eliminando, al mismo tiempo que se recorren, aquellas soluciones dominadas por $\boldsymbol{F}(\boldsymbol{y})$, por lo que basta añadir $\boldsymbol{F}(\boldsymbol{y})$ al conjunto para completar la actualización. \\
+
+\subsubsection{Otras cuestiones}
+
+Nótese que el proceso de evolución (actualización de $P$ y $VP$) se realiza de forma síncrona, esto es la actualización de $P_{i}$ se realiza directamente sobre $P$ y no en una matriz auxiliar que luego sea volcada. Por ello, los individuos son recorridos en orden aleatorio en cada iteración (mediante una lista con los índices que es reordenada aleatoriamente en cada iteración) de manera que las actualizaciones influyan (probabilísticamente) igual en todos los individuos.\\
+
+A fin de que se pueda testear el funcionamiento del algoritmo al final de cada iteración, la población (su valoración) es volcada a un fichero \textit{ASCII} en el que cada fila corresponde a un individuo y sus columnas reflejan las valoraciones del individuo y una última columna con el número de restricciones violadas. También es generado un fichero con el contenido de todas las generaciones.\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
