@@ -1,0 +1,16 @@
+%\section{Introducción}
+\justify
+
+Presentado previament el algoritmo MOEA/D con la evaluación de 3 operadores evolutivos, se propone ahora realizar una extensión del algoritmo para trabajar con Problemas de Optimización Multiobjetivo Restringidos (CMOP), de forma que se considera el CMOP de la forma:$$ \begin{array}{ll}minimize & F(\boldsymbol{x})=(f_1(\boldsymbol{x}), \dots, f_m(\boldsymbol{x}))\\
+subject \, to & g_j(x) \geq 0, \, j=1, \dots, n
+\end{array} $$ de manera que el espacio de búsqueda $\boldsymbol{x} \in \Omega$ es acotado y corresponde a $\Omega = X_1 \times \cdots \times X_p$, con $X_i$ el conjunto continuo de valores posibles para la componente $x_i$ acotado superior e inferiormente por $x_{Li}$ y $x_{Ui}$ respectivamente. Pero además ahora no todos los puntos son soluciones posibles para el problema, sino que sólo aquellos que cumplen todas las restricciones son factibles para el problema. Esto hace que frecuentemente la región factible sea una pequeña parte dentro del espacio total de búsqueda en ocasiones, incluso disconexa.\\
+
+El objetivo al igual que en el caso no restringido es encontrar los puntos o regiones que forma el frente de Pareto o frente Pareto-óptimo y que además son factibles, esto es, cumplen las restricciones.\\
+
+En el estado del arte, existen multitud de aproximaciones a esta categoría de problemas (\textit{CMOP}), pero nosotros presentaremos una basada en la extensión del algoritmo presentado en la primera parte \textit{MOEA/D}. Utilizando también la formulación de Tchebycheff para la descomposición de los problemas y utilizando el operador EOP1 presentado en el primer apartado. De hecho las únicas variaciones sobre el método propuesto serán llevados a cabo en dos aspectos, la evaluación de los  individuos, dado que ahora habrá que evaluarlos también frente a las restricciones y en el método de selección (actualización de la vecindad), en lo que se denominan métodos de manejo de restricciones.\\
+
+Dentro de este campo existen multitud de aproximaciones, aunque las principales vías de aproximación se distribuyen entre las aproximaciones mediante métodos o \textit{funciones penalti}, cuyo funcionamiento se basa en la penalización de los individuos por incumplimiento de restricciones, y las técnicas basadas en \textit{separación de objetivos y restricciones}, que anteponen el cumplimiento de restricciones ante la mejora de objetivos.  En este trabajo proponemos un método mixto basado en ambas aproximaciones y en otro artículos extraídos de la literatura, evaluando la aproximación propuesta frente al algoritmo NSGAII (con manejo de restricciones) para el problema CF-6 en sus versiones 4 y 16 dimensionales.\\
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

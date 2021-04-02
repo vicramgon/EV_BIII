@@ -1,0 +1,97 @@
+\subsection{Funcionamiento general del algoritmo}
+
+
+La \hyperref[fig:1]{\textit{figura 1}} muestra el diagrama de flujo general del algoritmo, ajustándose a un esquema típico de algoritmo evolutivo. De manera superficial, el algoritmo recibe las funciones objetivo, las funciones de restricción, el espacio de búsqueda y una serie de parámetros que intervienen en el algoritmo (detallados más adelante), lleva a cabo una primera etapa de inicialización de la población, los vectores de pesos y vecindad de los subproblemas, así como el punto de referencia y las evaluaciones de la población frente tanto a los objetivos como a las restricciones. A partir de ahí se lleva a cabo un proceso iterativo, en el que se va actualizando la población así como el punto de referencia. De forma que al fin del proceso la población constituye la aproximación del algoritmo al frente de Pareto para el problema tratado, distinguiendose para cada una de ellas las que son factibles (cumplen las restricciones) y las que no.\\
+
+
+\subsection{Datos de entrada}
+
+El algoritmo recibe como datos de entrada:\\
+\begin{itemize}
+    \item \textbf{Funciones objetivo}: Un conjunto ordenado de funciones $f_1, \dots, f_m$  consideradas como las funciones objetivo a optimizar por el algoritmo, tratando todas ellas como caso de minimización.\\
+    
+    \item \textbf{Restricciones}: Un conjunto ordenado de funciones $g_1, \dots, g_n$  consideradas como las restricciones del problema en formato $g_j(\boldsymbol{x})\geq 0$.\\
+    
+     \item \textbf{El espacio de búsqueda $\Omega$}: Dado por el producto cartesiano de los espacios de búsqueda de cada una de las variables, acotados superior e inferiormente por $x_{Lj}$ y $x_{Uj}$ respectivamente.\\
+
+	\item \textbf{$N$}: Corresponde al número de subproblemas considerados para la división del objetivo mútiple en subobjetivos individuales (por agregación).\\
+	
+	\item \textbf{$G$}: Corresponde al número de generaciones máximo que realizará el algoritmo, estableciendo un criterio de parada para el mismo.\\
+	  
+    \item \textbf{$T$}: Corresponde al número de vecinos de cada subproblema esto es, el número de subproblemas, incluyéndose a sí mismo, que serán considerados parte de la vecindad de cada uno de los subproblemas y que influirán en el proceso evolutivo de la población.\\
+    
+	\item \textbf{Operador evolutivo}: Durante el desarrollo del algoritmo son utilizados operadores de cruce y mutación que han de ser dados por el usuario y que obtendrán un solo individuo como descendiente de cada uno de los individuos de la población. En este trabajo utilizaremos el operador EOP1 presentado en la primera parte (optimización no restringida).\\
+    
+	\item \textbf{Otros parámetros}, que detallamos y justificamos en el apartado correspondiente.\\
+\end{itemize}
+
+\subsection{Inicialización del algoritmo}
+
+Para poder llevar a cabo la ejecución del algoritmo (proceso iterativo) hemos de disponer de algunos elementos que debemos inicializar al comienzo del algoritmo como son: \\
+
+\begin{itemize}
+    \item \textbf{El conjunto de vectores de pesos $\boldsymbol{\lambda_1}, \dots, \boldsymbol{\lambda_N}$}, vectores $m$-dimensionales que identifican a cada subproblema, de forma que para todos ellos debe cumplirse $||\boldsymbol{\lambda_{i}}||_{1} = 1$ y además deben estar distribuidos uniformemente (equiespaciados, tomando como distancia la forma euclídea). Para el caso bi-objetivo, dado que los vectores han de estar normalizados, los $N$ vectores pueden inicializarse siguiendo la expresión $\boldsymbol{\lambda_i} = \left(\frac{i-1}{N-1}, \frac{N-i}{N-1} \right)$ con $i \in \{1, \dots, N\}$.\\
+    
+    \item \textbf{Vecindad $B(i)$ de cada vector peso $\boldsymbol{\lambda_i}$}, que corresponde al conjunto de los  los $T$ vectores más cercanos a $\boldsymbol{\lambda_i}$ de entre todos los vectores de pesos (incluyendo al propio $\boldsymbol{\lambda_i}$). Nótese que $B(i)$ será considerado el entorno del subproblema $i$, de manera que debe considerarse un entorno cercano ($T$ pequeño) para la evolución del individuo asociado al subproblema considerado.\\
+
+    
+    \item \textbf{Inicialización de la población $P$}, con $N$ individuos cada uno de ellos asociados a uno de los subproblemas. Para la inicialización se generará una población aleatoria (respetando los espacios de búsqueda para cada variable). \\
+
+    \item \textbf{Inicialización del punto de referencia $\boldsymbol{z}$}. Recuérdese que según la formulación de Tchebycheff $\boldsymbol{z}^{*}$ debe contener los óptimos globales de cada una de las funciones objetivo en el espacio de búsqueda, pero esto implica resolver $m$ problemas de optimización mono-objetivo. En vez de eso relajaremos $\boldsymbol{z^{*}}$ en $\boldsymbol{z}$ de forma que contendrá en cada momento el mejor (menor) valor para cada $f_j$ ($j = 1, \dots, m$) alcanzado por cualquiera de los individuos tanto factibles como infactibles, evaluados hasta ese instante. De forma que dicho punto de referencia $\boldsymbol{z}$ se irá actualizando de forma síncrona al avance del algoritmo.\\
+    
+    \item \textbf{Inicialización del conjunto de soluciones no dominadas}. Opcionalmente, el algoritmo puede mantener un conjunto con las soluciones no dominadas por ninguna otra encontrada hasta el momento de forma que el conjunto será actualizado a lo largo del proceso evolutivo, realizándose dicha actualización de acuerdo al concepto extendido de Pareto-dominancia.\\
+\end{itemize}
+
+\subsection{Desarrollo iterativo}
+
+Tras la inicialización, comienza un proceso iterativo (evolutivo) en el que la población, se actualiza por medio del uso de operadores evolutivos y métodos de manejo de restricciones (métodos de señección) que presentaremos a continuación. Como criterio de parada para este proceso iterativo se tomará el límite de generaciones fijado por el usuario (al igual que en otros algoritmos de carácter evolutivo o inteligencia colectiva se pueden fijar otros criterios de parada anticipada). De manera que para cada iteración (generación) se llevan a cabo las siguientes operaciones:\\
+
+\begin{enumerate}
+	\justifying
+	
+    \item \textit{Reproducción}: Para cada uno de los individuos se aplica el operador evolutivo (cruces y/o mutaciones) de forma que cada individuo es perturbado (en mayor o menor medida) por el entorno. Como entorno se considera el vecindario $B(i)$, del que son tomados, con cierta aleatoriedad, (según el operador) una serie de individuos con los que se aplican los operadores evolutivos. Como el vecindario son los considerados problemas cercanos, es esperable que los cambios entre ellos sean pequeños por lo que los individuos tenderán a ser parecidos.\\
+    
+    En concreto se utilizará el operador EOP1 derivado de Evolución Diferencial + Perturbación Gaussiana, presentado (implementado y evaluado) en la primera parte del trabajo. de forma que el mismo del siguiente modo:\\
+
+    \begin{enumerate}
+        \item  El individuo $\boldsymbol{P_i}$ se genera el vector mutante $\boldsymbol{\hat{y}}$, con el uso de cinco vectores `noisy', mediante la expresión  $$\boldsymbol{\hat{y}}=\boldsymbol{x}^{(r1)} + F \cdot (\boldsymbol{x}^{(r2)}- \boldsymbol{x}^{(r3)}) + rand \cdot  F \cdot (\boldsymbol{x}^{(r4)}- \boldsymbol{x}^{(r5)}) $$ donde $F$ es elegido aleatoriamente de un pool de valores (entre $0$ Y $1$) y $rand$ corresponde a un número aleatorio (entre $0$ y $1$).\\
+        
+        \item  Tras esto, se realiza una recombinación utilizando el cruce típico de evolución diferencial, tal que cada componente del vector $\boldsymbol{y}$ se elige aleatoriamente entre $\boldsymbol{\hat{y}}$  y $\boldsymbol{P_i}$, de forma que $\boldsymbol{y}$ contenga al menos una componente del vector mutante. Para ello se sigue la expresión: $$ y_j = \left\lbrace \begin{array}{cl}
+            \hat{y}_{ij} & \textrm{si } rand \leq \textit{CR} \textrm{ o } j = \delta\\
+             P_{ij} & e.o.c.
+        \end{array} \right. $$ donde \textit{CR} corresponde a un parámetro ajustable (entre $0$ y $1$) que representa la probabilidad de cruce, $\delta$ corresponde a una de las componentes del descendiente elegida aleatoriamente y $rand$ corresponde a un número aleatorio (entre $0$ y $1$).\\
+        
+        \item Finalmente cada componente de $\boldsymbol{y}$ es perturbada con probabilidad $p_m$ (parámetro ajustable entre $0$ y $1$, típicamente establecida en la literatura como $1/p$, con $p$ la dimensionalidad del espacio de búsqueda) mediante una distribución gaussiana ($N(0,\sigma_{j} = \frac{x_{Uj} - x_{Lj}}{SIG})$ con $SIG$ un parámetro ajustable).\\
+        
+        \item Reparación: si alguna de las componentes quedara fuera del espacio de búsqueda según las cotas su valor es establecido al valor de la más cercana.\\
+    \end{enumerate}
+
+    \item[2.] \textit{Evaluación}: El descendiente obtenido es evaluado respecto a todos los objetivos $\boldsymbol{F}(\boldsymbol{y})$ y respecto a todas las restricciones definiéndose $V(\boldsymbol{y}) = \left\vert \sum \limits_{j=1}^{n} min(0, g_j(\boldsymbol{y})) \right\vert$ (cuantía da violación de restricciones).\\
+    
+    \item[3.] \textit{Actualización del punto de referencia $\boldsymbol{z}$}: Recuérdese que $z$ correspondía al vector $m$-dimensional ($m$ el número de objetivos) cuyas componenetes correspondientes correspondían a los pseudo-óptimos (mejores valores obtenidos hasta el momento) luego hemos de actualizar $z$ en aquellas componentes tal que $F_j(\boldsymbol{y}) < z_j$ (con $j=1,\dots,m$). Nótese que el punto de referencia es actualizado de igual forma tanto con soluciones factibles como infactibles.\\
+    
+    \item[4.] \textit{Actualización del entorno $B(i)$}: El vecindario del subproblema $i$ (en el que se incluye él mismo) es actualizado siguiendo un criterio de selección. En este trabajo vamos a presentar un criterio mixto, basado en el concepto de dominancia pareto (separación de objetivos y restricciones) y en el concepto de función penalti. Este último suele ser más utilizado en la literatura y existen multitud de versiones \textit{Static}, \textit{Multi-staged}, \textit{Dynamic}, \textit{Self-adaptative}, \textit{Three-steps}, ... \cite{Vaz}. Nuestra perspectiva (basada en \cite{Fan2017,Asafuddoula2012,Yang2020,Jan2010,Zhu2019}) utiliza un método adaptativo y basado en umbral de forma que se aplicará una diferente penalización según la cuantía de la violación de restricciones. Además se aplicará según un criterio basado en la técnica de separación de objetivos y restricciones. En concreto el operador de selección toma $\boldsymbol{x_j}$ el individuo considerado en la actualización con valoración $\boldsymbol{F}(\boldsymbol{x_j})$ y cuantía de violación de restricciones $V(\boldsymbol{x_j})$ y $\boldsymbol{y})$ el descendiente con valoración $\boldsymbol{F}(\boldsymbol{y})$ y violación de restricciones $V(\boldsymbol{y})$, entonces:\\
+    
+    \begin{itemize}
+    \item Si $V(\boldsymbol{y})=0$ y   o $V(\boldsymbol{x})>0$ o $g^{te}(\boldsymbol{y} \vert \lambda_j, \boldsymbol{z}^{*}) < g^{te}(\boldsymbol{x_j} \vert \lambda_j, \boldsymbol{z}^{*})$, entonces $\boldsymbol{x_j}$ es actualizado con $\boldsymbol{y}$.\\
+    
+    \item Si no, entonces $V(\boldsymbol{y})>0 \wedge V(\boldsymbol{x_j})>0$, entonces entonces se toma $\boldsymbol{\epsilon}$ un véctor de la élite y se toma de entre los tres aquél con mejor (menor) \textit{fitness} definida como: $$ fitness(\boldsymbol{x}) = g^{te}(\boldsymbol{x} \vert \lambda_j, \boldsymbol{z}^{*}) + \left\lbrace \begin{array}{cl}
+  s*V(\boldsymbol{x})^{2}   & \textrm{si } V(\boldsymbol{x}) \leq \tau \\
+  s*\tau^{2} + \eta (V(\boldsymbol{x})^{2} - \tau)   & \textrm{si } V(\boldsymbol{x}) > \tau \\
+\end{array} \right. $$ donde $\tau$ es el valor umbral de penalización aceptada y es calculado como la cuantía media de entre las violaciones, $\eta$ corresponde a la penalización de superación del umbral y $s$ a la penalización de restricciones por debajo del umbral. De forma que, $$\tau=\frac{\sum \limits_{i \in B(j)} V(\boldsymbol{x_i})}{d_j}; \quad d_j = |\{i \in B(j)/ V(\boldsymbol{x_i})>0 \}|; \quad \eta=100^{\frac{it}{G}}; \quad s= \left\lbrace \begin{array}{cl} 10^{-\frac{G}{it}} & \textrm{si } it/G < 75\% \\ \eta & \textrm{e.o.c.}\end{array}\right. $$
+    \end{itemize}
+    
+Nótese que lo que se pretende con $\eta$ y $s$ es realizar una búsqueda por la región factible y por las inmediaciones de la misma, de forma que en las primeras iteraciones se permite una búsqueda más libre mientras que en las últimas se fuerza a que los individuos vayan hacia la zona factible. Además nótese que usualmente los vectores de la élite son factibles (en el momento en el que se encuentre una factible todas las infactibles salen del conjunto NDS) por lo que las soluciones tenderán a moverse a la zona factible.\\
+
+      Hemos de notar también que la actualización de los vecinos puede conllevar una gran pérdida de la diversidad mucho más apreciable que en el caso no restringido. Por ello se limita la capacidad de actualización a un número de actualizaciones muy bajo (normalmente menor del 5\% del tamaño de la población).Además dado el proceso iterativo propuesto, aunque no ha sido especificado, el proceso de actualización de la población (y sus valoraciones) se realiza directamente sobre la población, y no se espera para ser efectiva al fin de la generación. Por ello es conveniente que a la hora de llevar a cabo las actualizaciones los elementos se recorran en un orden aleatorio, para tratar de evitar descompensaciones entre los individuos.\\
+\end{enumerate}
+
+\subsection{Final del algoritmo}
+
+\justify
+
+El proceso iterativo previo se realiza hasta alcanzar el criterio de parada, dado por el número máximo de generaciones $G$. De forma que al final del proceso en la última población se tienen justamente los mejores individuos encontrados durante el proceso para cada uno de los subproblemas y cuyas valoraciones constituyen, precisamente, la aproximación al frente de Pareto. \\
+
+También es posible, y casi más fiel, considerar el $NSD$ una aproximación más cercana y más amplia al frente real Pareto-óptimo, dado que en él se encontrarán todas aquellas soluciones no dominadas por ninguna otra de las encontradas durante todo el proceso de búsqueda.\\ 
+
+
