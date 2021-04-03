@@ -1,8 +1,8 @@
 %\section{Implementación}
 
 
-\justify
-
+\justifying
+\noindent\begin{minipage}[H]{0.5\linewidth}
 
 En este apartado describiremos la implementación concreta realizada de la metodología previamente propuesta, concretando cada una de las etapas y procesos. En el \hyperref[alg:1]{\textit{algoritmo 1}} se presenta el pseudocódigo del marco general de desarrollo, del algoritmo. En los puntos esta sección concretaremos cada una de las partes del mismo, dando los detalles de implementación correspondientes.\\
 
@@ -14,7 +14,6 @@ Como se propone en la metodología los datos de entrada corresponden a:\\
     \item \textbf{Funciones objetivo $f_1, \dots, f_m$}:  Dadas como una lista de longitud $m$ de funciones, que reciban como entrada un indivividuo (vector $p-dimensional$) y devuelvan una valor real correspondiente a la valoración del individuo respecto de dicha función.\\
 \end{itemize}
 
-\noindent\begin{minipage}[H]{0.5\linewidth}
 \begin{itemize}
 	\item \textbf{Restricciones $g_1, \dots, g_n$}:  Dadas como una lista de longitud $n$ de funciones, que reciban como entrada un indivividuo (vector $p-dimensional$) y devuelvan una valor real correspondiente a la valoración del individuo respecto de dicha función.\\
 	
@@ -22,21 +21,9 @@ Como se propone en la metodología los datos de entrada corresponden a:\\
      
      \item \textbf{Número de subproblemas $N$}: Un entero que corresponde al número de subproblemas considerados, esto es el número de vectores de pesos $\boldsymbol{\lambda_i}$ y el tamaño considerado para la población.\\
      
-     \item \textbf{Número de generaciones $G$}:  Un entero que corresponde al número de máximo de iteraciones llevadas a cabo por el algoritmo.\\
     
-    \item \textbf{Número de vecinos $T$}: Un entero correspondiente al número de subproblemas, incluyéndose a sí mismo, que serán considerados parte de la vecindad.\\
     
 \end{itemize} 
-
-
-\subsection{Inicialización}
-
-Durante la fase de inicialización se establecen los valores iniciales para:\\
-
-\begin{itemize}
-\item\textbf{ Vectores de pesos $(\boldsymbol{\lambda_1}, \dots, \boldsymbol{\lambda_N})$}, de forma que si el problema es bi-objetivo dichos vectores son generados utilizando la expresión $\boldsymbol{\lambda_i} = \left(\frac{i-1}{N-1}, \frac{N-i}{N-1} \right)$ con $i \in \{1, \dots, N\}$ para $i=1,\dots, N$. Si se desea es posible especificar un fichero en formato \textit{ASCII} del que se leerán las $N$ primeras lineas que deberán contener los vectores de pesos considerados.\\
-
-\end{itemize}
 
 \end{minipage} \hfill
 \begin{minipage}[H]{0.47\linewidth}
@@ -104,6 +91,23 @@ Durante la fase de inicialización se establecen los valores iniciales para:\\
 \end{algorithm}
 \end{minipage}\\
 
+
+\begin{itemize}
+ \item \textbf{Número de generaciones $G$}:  Un entero que corresponde al número de máximo de iteraciones llevadas a cabo por el algoritmo.\\
+    
+    \item \textbf{Número de vecinos $T$}: Un entero correspondiente al número de subproblemas, incluyéndose a sí mismo, que serán considerados parte de la vecindad.\\
+\end{itemize}
+
+\subsection{Inicialización}
+
+Durante la fase de inicialización se establecen los valores iniciales para:\\
+
+\begin{itemize}
+\item\textbf{ Vectores de pesos $(\boldsymbol{\lambda_1}, \dots, \boldsymbol{\lambda_N})$}, de forma que si el problema es bi-objetivo dichos vectores son generados utilizando la expresión $\boldsymbol{\lambda_i} = \left(\frac{i-1}{N-1}, \frac{N-i}{N-1} \right)$ con $i \in \{1, \dots, N\}$ para $i=1,\dots, N$. Si se desea es posible especificar un fichero en formato \textit{ASCII} del que se leerán las $N$ primeras lineas que deberán contener los vectores de pesos considerados.\\
+
+\end{itemize}
+
+
 \begin{itemize}
 
 \item \textbf{Vecindad de los subproblemas $B$}. Corresponde a una lista de listas que contienen los índices considerados dentro de la vecindad de un subproblema, de forma que para cada subproblema $i$ son considerados como vecinos los $T$ cuyos vectores asociados son más cercanos a $\boldsymbol{\lambda_i}$. Para ello se crea (temporalmente) un matriz de distancias $D_{N \times N}$ tal que cuya posición $i,j$ corresponde a la distancia euclídea entre $\boldsymbol{\lambda_i}$ y $\boldsymbol{\lambda_j}$. Una vez calculada dicha matriz, el vecindario de $i$ corresponde a los $T$ $j$ con menor $d_{ij}$.\\
@@ -116,10 +120,10 @@ Durante la fase de inicialización se establecen los valores iniciales para:\\
 
 \item \textbf{Punto de referencia $\boldsymbol{z} = (z_1, \dots, z_m)$}. Corresponde al vector de los mejores valores encontrados para cada una de las funciones objetivo $f_1, \dots. f_m$. Teniendo en cuenta que inicialmente solo se tienen los individuos de $P$, cuyas valoraciones corresponden a $VP$, para la inicialización de $z$ basta coger el mínimo de cada columna de $FP$ que será el mejor (menor) valor encontrado hasta el momento) indistintamente de si es factible o infactible.\\
 
-\item \textbf{Conjunto de soluciones no dominadas \textit{NDS Set}}. Corresponde al conjunto de vectores en el espacio de objetivos (valoraciones) que no son dominada por ninguna encontrada hasta el momento. Teniendo en cuenta que inicialmente solo se han encontrado las soluciones de $VP$ basta recorrer $VP$ y añadir \textit{NDS Set} aquellas que no son dominadas por ninguna otra, utilizando el concepto de Pareto-dominancia extendido. Esto es equivalente a tomar el inicialmente \textit{NDS Set} y realizar una actualización de \textit{NDS Set} con cada solución (vector fila) de $VP$. Dicha actualización se realiza según los pseudocódigos presentados en el \hyperref[alg:2]{algoritmo 2} y el \hyperref[alg:3]{algoritmo 3}\\
+\item \textbf{Conjunto de soluciones no dominadas \textit{NDS Set}}. Corresponde al conjunto de vectores en el espacio de objetivos (valoraciones) que no son dominada por ninguna encontrada hasta el momento. Dado que inicialmente solo se han encontrado las soluciones de $VP$ basta recorrer $VP$ y añadir \textit{NDS Set} aquellas que no son dominadas por ninguna otra, utilizando el concepto de Pareto-dominancia extendido. Esto es equivalente a tomar el inicialmente \textit{NDS Set} y realizar una actualización de \textit{NDS Set} con cada solución (vector fila) de $VP$. Dicha actualización se realiza según los pseudocódigos presentados en el \hyperref[alg:2]{algoritmo 2} y el \hyperref[alg:3]{algoritmo 3}\\
 
 \begin{center}
-\begin{minipage}[H]{0.8\linewidth}
+\begin{minipage}[H]{0.45\linewidth}
     \begin{algorithm}[H]
 \SetAlgoLined
  \textbf{Entrada}:
@@ -127,21 +131,22 @@ Durante la fase de inicialización se establecen los valores iniciales para:\\
  
      \vspace{0.15cm}\item \textit{NDS}: $(NDS_P, NDS_F, NDS_V)$	
      
-    \vspace{0.15cm}\item $\boldsymbol{x}, F^{(x)} = F(\boldsymbol{x}), V^{(x)} = V(\boldsymbol{x})$: vector de actualización
+    \vspace{0.15cm}\item $\boldsymbol{x}, F^{(x)} = F(\boldsymbol{x}), V^{(x)} = V(\boldsymbol{x})$
  \end{itemize}
  
  \vspace{0.3cm}
   
  \textbf{Actualización del NDS}:\\
         \begin{itemize}
-        	\vspace{0.15cm}\item $NDS' \gets copy(NDS_P) \implies NDS'=(NDS'_P, NDS'_F, NDS'_V)$;
-        	\vspace{0.15cm}\item \textit{Para $i=1, \dots, |NDS_P|$}:  \hspace{2.5cm} /*{\scriptsize $|NDS_P|=|NDS_F|=|NDS_V|$}*/
+        	\vspace{0.15cm}\item $NDS' \gets copy(NDS)$;
+        	\vspace{0.15cm}\item \textit{Para $i=1, \dots, |NDS_P|$}:  \hspace{2.5cm}
         	\begin{itemize}
-        		\vspace{0.15cm}\item $F^{(j)} \gets NDS_F[j]$;  $V_j \gets NDS_V[j]$
+        		\vspace{0.15cm}\item $F^{(j)} \gets NDS_F[j]$
+        		\vspace{0.15cm}\item $V^{(j)} \gets NDS_V[j]$
             	\vspace{0.15cm}\item Si $(F^{(j)},V^{(j)}) \succ (F^{(x)}, V^{(x)})$: STOP
             	\vspace{0.15cm}\item Si $(F^{(x)}, V^{(x)}) \succ (F^{(j)},V^{(j)})$: $NDS'[j] \gets (x, F_x, V_x)$
         	\end{itemize}
-        	\vspace{0.15cm}\item Devolver $NDS \gets unique(NDS')$
+        	\vspace{0.15cm}\item Hacer $NDS \gets unique(NDS')$
         \end{itemize}
     \vspace{0.3cm} 
     
@@ -152,14 +157,15 @@ Durante la fase de inicialización se establecen los valores iniciales para:\\
  \caption{Actualización de \textit{NDS}}
  \label{alg:2}
 \end{algorithm}
-\end{minipage} \\
-\begin{minipage}[H]{0.8\linewidth}
+\end{minipage} \;
+\begin{minipage}[H]{0.5\linewidth}
     \begin{algorithm}[H]
 \SetAlgoLined
  \textbf{Entrada}:
  \begin{itemize}
  
-    \vspace{0.15cm}\item $s_a = (F^{(a)}, V^{(a)})$, $s_b = (F^{(b)}, V^{(b)})$
+    \vspace{0.15cm}\item $s_a = (F^{(a)}, V^{(a)})$,
+     \vspace{0.15cm}\item $s_b = (F^{(b)}, V^{(b)})$
     \vspace{0.15cm}\item $m$: número de objetivos
  \end{itemize}
  
@@ -171,18 +177,18 @@ Durante la fase de inicialización se establecen los valores iniciales para:\\
         	\vspace{0.15cm}\item Si $V^{(a)} > V^{(b)}$: devolver \textit{False}
         	\vspace{0.15cm}\item Si $V^{(a)} = V^{(b)}$: 
         	\begin{itemize}
-        		\vspace{0.15cm}\item Si $\exists j=1, \dots, m / F_i^{(b)} < F_i^{(a)}$: devolver \textit{False} 
+        		\vspace{0.15cm}\item Si $\exists j=1, \dots, m / F_i^{(b)} < F_i^{(a)}$:\\devolver \textit{False} 
             	\vspace{0.15cm}\item Si no, $\exists j=1, \dots, m / F_i^{(a)} < F_i^{(b)}$: devolver \textit{True} 
             	\vspace{0.15cm}\item Si no: devolver \textit{False}
         	\end{itemize}
         \end{itemize}
     \vspace{0.3cm} 
     
-    \textbf{Salida}: Si $s_a$ domina a $s_b$: $s_a \succ s_b$
+    \textbf{Salida}:
     \begin{itemize}
-        \item \textit{NDS} Actualizado.
+        \item ¿$ s_a \succ_{ext} s_b$? (\textit{True}/\textit{False})
     \end{itemize}
- \caption{Dominancia Pareto extendida: $(F^{(a)}, V^{(a)}) \succ (F^{(b)}, V^{(b)})$}
+ \caption{Pareto-dominancia ext.}
  \label{alg:3}
 \end{algorithm}
 \end{minipage}\\
@@ -277,17 +283,72 @@ Consistente en la generación de los nuevos descendientes. Para ello, se pueden 
 
 Una vez generado el sucesor éste es evaluado respecto a cada uno de los objetivos almacenándose en un vector $\boldsymbol{f_y}$ las valoraciones tal que la posición $k$ de dicho vector corresponde a $f_k(\boldsymbol{y})$.\\
 
-De igual forma el sucesor es evaluado respecto de las restricciones, calculándose y almacenándose $V_y = V(y)$.\\
+De igual forma el sucesor es evaluado respecto de las restricciones y se calcula $V_y = V(y)$ como la suma de los valores del vector que resulta de dicha evaluación..\\
 
 \subsubsection{Actualización del punto de referencia}
 
-Como $\boldsymbol{z}$ debe mantener en todo momento los mejores valores obtenidos por alguno de los individuos, es necesario actualizar aquellas componentes en las que $\boldsymbol{f_y}$ sea mejor (menor) que $\boldsymbol{z}$, de forma que para cada componente $j=1, \dots, m$, se actualiza $\boldsymbol{z}$ con $z_j = \min(z_j, (f_y)_j)$.\\
+Como $\boldsymbol{z}$ debe mantener en todo momento los mejores valores obtenidos por alguno de los individuos, es necesario actualizar aquellas componentes en las que $\boldsymbol{f_y}$ sea mejor (menor) que $\boldsymbol{z}$, de forma que para cada componente $j=1, \dots, m$, se actualiza $\boldsymbol{z}$ con $z_j = \min(z_j, (f_y)_j)$. \\
 
 \subsubsection{Actualización de los vecinos}
 
-A continuación se aplicará sobre el vecindario el operador de selección descrito en la metodología. Para ello se opera siguiendo el pseudocódigo presentado en el \hyperref[alg:5]{algoritmo 5}.\\
+A continuación se aplicará sobre el vecindario el operador de selección,de entre los que han sido presentados en la metodología, cuyos pseudocódigos se presentan en el \hyperref[alg:5]{algoritmo 5} y el \hyperref[alg:6]{algoritmo 6}, siguiendo los pasos descritos detalladamente en la metodología.\\
 
-Como se ha indicado previamente la actualización de muchos de los vecinos puede llevar al algoritmo a una convergencia prematura (estancamiento) por ello se controla mediante el parámetro $UN$ el número máximo de actualizaciones.\\
+
+\subsubsection{Actualización de \textit{NDS Set}}
+
+Para mantener en todo el momento la consistencia del conjunto cada vez que es generado un descendiente se actualiza el conjunto añadiendo la valoración asociada y eliminando las soluciones dominadas por ella, si procede.\\
+
+Para ello se recorre el conjunto de soluciones dominadas, comparando cada solución con $\boldsymbol{F}(\boldsymbol{y})$ en el momento en que se encuentre una que la domine, el proceso es abortado. En caso de que no se encuentre ninguna, se habrán ido eliminando, al mismo tiempo que se recorren, aquellas soluciones dominadas por $\boldsymbol{F}(\boldsymbol{y})$, por lo que basta añadir $\boldsymbol{F}(\boldsymbol{y})$ al conjunto para completar la actualización. \\
+
+
+\begin{center}
+\begin{minipage}[H]{0.8\linewidth}
+    \begin{algorithm}[H]
+\SetAlgoLined
+ \textbf{Entrada}:
+ \begin{itemize}
+ 
+     \vspace{0.15cm} \item $i$: el subproblema considerado.
+     \vspace{0.15cm} \item $B$: la lista de vecindades. 
+     \vspace{0.15cm} \item $P, FP, VP$: la población y su valoración de objetivos y restricciones.
+     \vspace{0.15cm} \item $\boldsymbol{\lambda}$: la lista de vectores de pesos.
+     \vspace{0.15cm} \item $z$: el vector de mejores valores objetivo.
+     \vspace{0.15cm} \item $NDS$: conjunto de soluciones no dominadas.
+     \vspace{0.15cm} \item $\boldsymbol{y},\boldsymbol{f_y}, V_y$: el descendiente y su valoración de objetivos y restricciones.
+     \vspace{0.15cm} \item $m$: el número de objetivos.
+ \end{itemize}
+ 
+ \vspace{0.3cm}
+  
+ \textbf{Actualización de la vecindad}:\\
+        \begin{itemize}
+        	\vspace{0.15cm} \item $c=0$,  $\eta= 20$, $\sigma=0.01$;
+        	\vspace{0.15cm}\item \textit{Para $j=1, \dots, B(i)$}:
+        	\begin{itemize}
+        		\vspace{0.15cm}\item $f_x=FP[j]$, $V_x=VP[j]$, 
+        		\vspace{0.15cm}\item $Vmin = min\{V_x \in VP[B(j)\}$, $Vmax = max\{V_x \in VP[B(j)\}$, 
+        		\vspace{0.15cm}\item $\tau= Vmin + 0.3 \cdot (Vmax - Vmin)$
+        		\vspace{0.15cm}\item $fitness_x = max \{\lambda[j][i] \cdot  \left\vert f_x[i]-z[i] \right\vert; i=1, \cdots m\} + \sigma \cdot min(\tau, V_x)^2 + \eta \cdot max(0, V_x-\tau)$
+        		\vspace{0.15cm}\item $fitness_y = max \{\lambda[j][i] \cdot  \left\vert f_y[i]-z[i] \right\vert; i=1, \cdots m\} + \sigma \cdot min(\tau, V_y)^2 + \eta \cdot max(0, V_y-\tau)$
+        		\vspace{0.15cm}\item Si $fitness_y \leq fitness_x$:
+            	\begin{itemize}
+            		\vspace{0.15cm}\item $P[j]=\boldsymbol{y}$, $FP[j]=\boldsymbol{f_y}$, $VP[j]=V_y$
+            		\vspace{0.15cm}\item $c \gets c + 1$
+				\end{itemize}            	 
+            	\vspace{0.15cm}\item Si $c \geq UN$: \textit{next} $j$
+        	\end{itemize}
+        \end{itemize}
+    \vspace{0.3cm} 
+    
+    \textbf{Salida}:
+    \begin{itemize}
+        \item Población actualizada.
+    \end{itemize}
+ \caption{Actualización de la vecindad del subproblema $i$ (OS 1)}
+ \label{alg:5}
+\end{algorithm}
+\end{minipage} \\
+\end{center}
 
 \begin{center}
 \begin{minipage}[H]{0.8\linewidth}
@@ -305,59 +366,53 @@ Como se ha indicado previamente la actualización de muchos de los vecinos puede
      \vspace{0.15cm} \item $\boldsymbol{y},\boldsymbol{f_y}, V_y$: el descendiente y su valoración de objetivos y restricciones.
      \vspace{0.15cm} \item $it$: el número de generación actual.
      \vspace{0.15cm} \item $G$: el número máximo de generaciones.
+     \vspace{0.15cm} \item $m$: el número de objetivos.
  \end{itemize}
  
  \vspace{0.3cm}
   
  \textbf{Actualización de la vecindad}:\\
         \begin{itemize}
-        	\vspace{0.15cm} \item $c=0$,  $\eta= 20^{\frac{it}{G}}$, $s= it < \frac{3*G}{4} ? 10^{-\frac{G}{it}} : \eta $;
+        	\vspace{0.15cm} \item $c=0$,  $\eta= 10^{\frac{it}{G}}$;
         	\vspace{0.15cm}\item \textit{Para $j=1, \dots, B(i)$}:
         	\begin{itemize}
-        		\vspace{0.15cm}\item $\tau= mean (\{V_x \in VP[B(j)] / V_x > 0\})$
-            	\vspace{0.15cm}\item Si $V_y = 0 \wedge (V_x > 0 \vee g^{te}(\boldsymbol{y}| \lambda_j, \boldsymbol{z})$: 
+        		\vspace{0.15cm}\item $f_x=FP[j]$, $V_x=VP[j]$, 
+        		\vspace{0.15cm}\item $gte_x = max \{\lambda[j][i] \cdot  \left\vert f_x[i]-z[i] \right\vert; i=1, \cdots m\}$
+        		\vspace{0.15cm}\item $gte_y = max \{\lambda[j][i] \cdot  \left\vert f_y[i]-z[i] \right\vert; i=1, \cdots m\}$
+        		\vspace{0.15cm}\item Si $V_y=0 \wedge (V_x>0 \vee gte_x >= gte_y)$:
             	\begin{itemize}
             		\vspace{0.15cm}\item $P[j]=\boldsymbol{y}$, $FP[j]=\boldsymbol{f_y}$, $VP[j]=V_y$
             		\vspace{0.15cm}\item $c \gets c + 1$
-				\end{itemize}            	 
-            	\vspace{0.15cm}\item Si no:
-            	\begin{itemize}
-        		\vspace{0.15cm}\item $\boldsymbol{x_e}=rand \in NDS_P$, $\boldsymbol{f_e}=(NDS_F)_{e}$, $V(e) = (NDS_V)_{e}=V(e)$
-            	\vspace{0.15cm}\item $winner \gets argmin [fitness_y, fitness_j, fitness_e]$
-            	\vspace{0.15cm}\item Si $winner = 1$: 
+				\end{itemize}   
+				
+				\vspace{0.15cm}\item Si no si $gte_x + \eta \cdot V_x >= gte_y + \eta \cdot V_y)$:
             	\begin{itemize}
             		\vspace{0.15cm}\item $P[j]=\boldsymbol{y}$, $FP[j]=\boldsymbol{f_y}$, $VP[j]=V_y$
             		\vspace{0.15cm}\item $c \gets c + 1$
-				\end{itemize} 
-				\vspace{0.15cm}\item Si $winner = 3$: 
-				\begin{itemize}
-            		\vspace{0.15cm}\item $P[j]=\boldsymbol{x_e}$, $FP[j]=\boldsymbol{f_e}$, $VP[j]=V_e$
-				\end{itemize}
+				\end{itemize}  
+				         	 
+            	\vspace{0.15cm}\item Si $c \geq UN$: \textit{next} $j$
         	\end{itemize}
-        	\end{itemize}
-        	\vspace{0.15cm}\item Devolver $NDS \gets unique(NDS')$
         \end{itemize}
     \vspace{0.3cm} 
     
     \textbf{Salida}:
     \begin{itemize}
-        \item \textit{NDS} Actualizado.
+        \item Población actualizada.
     \end{itemize}
- \caption{Actualización de la vecindad del subproblema $i$}
+ \caption{Actualización de la vecindad del subproblema $i$ (OS 1)}
  \label{alg:5}
 \end{algorithm}
 \end{minipage} \\
 \end{center}
 
-\subsubsection{Actualización de \textit{NDS Set}}
 
-Para mantener en todo el momento la consistencia del conjunto cada vez que es generado un descendiente se actualiza el conjunto añadiendo la valoración asociada y eliminando las soluciones dominadas por ella, si procede. Para ello se recorre el conjunto de soluciones dominadas, comparando cada solución con $\boldsymbol{F}(\boldsymbol{y})$ en el momento en que se encuentre una que la domine, el proceso es abortado. En caso de que no se encuentre ninguna, se habrán ido eliminando, al mismo tiempo que se recorren, aquellas soluciones dominadas por $\boldsymbol{F}(\boldsymbol{y})$, por lo que basta añadir $\boldsymbol{F}(\boldsymbol{y})$ al conjunto para completar la actualización. \\
 
 \subsubsection{Otras cuestiones}
 
 Nótese que el proceso de evolución (actualización de $P$ y $VP$) se realiza de forma síncrona, esto es la actualización de $P_{i}$ se realiza directamente sobre $P$ y no en una matriz auxiliar que luego sea volcada. Por ello, los individuos son recorridos en orden aleatorio en cada iteración (mediante una lista con los índices que es reordenada aleatoriamente en cada iteración) de manera que las actualizaciones influyan (probabilísticamente) igual en todos los individuos.\\
 
-A fin de que se pueda testear el funcionamiento del algoritmo al final de cada iteración, la población (su valoración) es volcada a un fichero \textit{ASCII} en el que cada fila corresponde a un individuo y sus columnas reflejan las valoraciones del individuo y una última columna con el número de restricciones violadas. También es generado un fichero con el contenido de todas las generaciones.\\
+A fin de que se pueda testear el funcionamiento del algoritmo al final de cada iteración, la matriz de soluciones ($(FP_{N \times m} |VP_{N \times 1})$) es volcada a un fichero \textit{ASCII} en el que cada fila corresponde a un individuo y sus columnas reflejan las valoraciones del individuo y una última columna con el número de restricciones violadas. También es generado un fichero con el contenido de todas las generaciones y otro con el contenido final del conjunto de soluciones no dominadas (en caso de usarse).\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
