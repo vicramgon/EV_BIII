@@ -1,0 +1,65 @@
+===========================================
+INSTRUCCIONES PARA LA EJECUCIÓN DEL CÓDIGO
+===========================================
+
+Para ejecutar la recreación de las pruebas es necesario un entorno Linux con python3 y gnuplot instalado.
+
+Para recrear la experimentación del estudio:
+
+ARCHIVOS CON LOS ALGORITMOS:
+
+    · ASCEVBIII_THRES.py    # OS1 -> BASADO EN UMBRAL
+    · ASCEVBIII_ADAPT.py    # OS2 -> ADAPTATIVO
+    
+
+1. Ejecutar las pruebas de los algoritmos con las distintas semillas. Dichas pruebas se encuentran ya programadas en los archivos correspondientes por lo que es suficiente con ejecutar las pruebas en la consola:
+
+    > python3 PROOFS_CF6_4D_ADAPT.py
+    > python3 PROOFS_CF6_4D_THRES.py
+    > python3 PROOFS_CF6_16D_ADAPT.py
+    > python3 PROOFS_CF6_16D_THRES.py
+    
+Dichas ejecuciones generan una serie de archivos .out en los directorios de los algoritmos y casos correspondientes con la información de las distintas poblaciones de las distintas generaciones, con la de la última generación y con la del NDS final.
+
+Además se generan también en los subdirectorios plots una serie de gráficas que representan de forma gráfica la información presente en esos archivos y también una primera comàración con el algoritmo NSGAII.
+
+
+2. Ejecutar las pruebas de métricas para todas las semillas, generaciones y algoritmos. Esas pruebas se encuentran automatizadas por lo que es suficiente ejecutar los archivos que las contienen. Para ello en el terminal y desde el subdirectorio METRICS ejecutar :
+
+    > ./proofAllGenAllSeedsAllEOP.sh
+    > ./proofAllGenAllSeedsAllEOPCOMPWITHNSGAII.sh
+    
+Esto generará una serie de gráficos en los directorios de los algoritmos y casos correspondientes en los subdirectorios METRICS_PLOTS (no en el general, sino en el específico de cada caso del algoritmo), que representan las medidas de hipervolumen y espaciado para todas las semillas del caso correspondiente.
+
+También se generan en el directorio METRICS_PLOTS (el general) una serie de gráficos comparativos entre los algoritmos propuestos y el algoritmo NSGAII, con las comparativas para todas las semillas y generaciones de las métricas de hipervolumen, espaciado y cover set.
+
+3. Ejecutar las pruebas de métricas para las últimas generaciones. Esas pruebas se encuentran automatizadas por lo que es suficiente ejecutar los archivos que las contienen. Para ello en el terminal y desde el subdirectorio METRICS ejecutar :
+
+    # PARA EL HIPERVOLUMEN Y ESPACIADO
+    > ./FGEN_HV_SPC_CF64D_4000EV.sh
+    > ./FGEN_HV_SPC_CF64D_10000EV.sh
+    > ./FGEN_HV_SPC_CF616D_4000EV.sh
+    > ./FGEN_HV_SPC_CF616D_10000EV.sh
+    
+    # PARA EL COVER SET
+    > ./FGEN_CS_CF64D_4000EV.sh
+    > ./FGEN_CS_CF64D_10000EV.sh
+    > ./FGEN_CS_CF616D_4000EV.sh
+    > ./FGEN_CS_CF616D_10000EV.sh
+    
+Esto generará una serie de archivos en los subderectorios tmp* y además mostrarán al final de la ejecución una tabla con la media y desviación típica calculada de las distintas semillas. 
+
+4. Ejecutar las pruebas de métricas para las últimas generaciones. Esas pruebas se encuentran automatizadas por lo que es suficiente ejecutar los archivos que las contienen. Para ello en el terminal y desde el subdirectorio METRICS ejecutar :
+
+    # PARA EL HIPERVOLUMEN Y ESPACIADO
+    > ./NDS_HV_SPC_CF64D_4000EV.sh
+    > ./NDS_HV_SPC_CF64D_10000EV.sh
+    > ./NDS_HV_SPC_CF616D_4000EV.sh
+    > ./NDS_HV_SPC_CF616D_10000EV.sh
+    
+    # PARA EL COVER SET
+    > ./FGEN_CS_CF64D.sh
+    > ./FGEN_CS_CF616D.sh
+    
+Esto generará una serie de archivos en los subderectorios tmp* y además mostrarán al final de la ejecución una tabla con la media y desviación típica calculada de las distintas semillas. 
+

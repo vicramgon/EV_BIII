@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Apr  3 19:50:36 2021
+
+@author: victor
+"""
+#%%
+'''
+##############
+# LIBRARIES #
+#############
+'''
+
+import numpy as np                 # Math library
+import os
+import shutil
+import matplotlib as mpl
+import matplotlib.pyplot as plt    # Plot library       
+import sys
+
+#%%
+'''
+###############################
+# PLOT HYPERVOLUME ALL SEEDS #
+##############################
+
+'''
+
+N = int(sys.argv[1])
+G = int(sys.argv[2]) 
+T = int(sys.argv[3]) 
+EOP = str(sys.argv[4])
+PROB = str(sys.argv[5])
+dataFile = str(sys.argv[6])
+
+print(N, G, T, EOP, PROB, dataFile)
+colors = plt.get_cmap('jet', 10)
+data = np.genfromtxt(dataFile, delimiter='\t')
+
+if not(os.path.isdir(f'../{EOP}/{PROB}/EVAL{N*G}/METRICS_PLOTS/')):
+    os.mkdir(f'../{EOP}/{PROB}/EVAL{N*G}/METRICS_PLOTS/')
+    
+
+for i,s in enumerate([1,2,3,4,5,6,7,8,9,99]):
+    plt.plot(np.arange(1, G+1), data[G*i:G*(i+1),1], label=f"seed {s}", c=colors(i))
+    
+plt.title(f'Spacing {EOP} {PROB} N{N} G{G}\n')
+plt.xlabel('Generation', fontsize=11)
+plt.ylabel('Spacing', fontsize=11)
+plt.legend()
+plt.subplots_adjust(left=0.125,
+                    bottom=0.125, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0.35, 
+                    hspace=0.35)
+plt.grid(True)
+
+plt.savefig(f'../{EOP}/{PROB}/EVAL{N*G}/METRICS_PLOTS/Spacing_N{N}_G{G}.png', dpi=600)
+plt.clf(); plt.close()

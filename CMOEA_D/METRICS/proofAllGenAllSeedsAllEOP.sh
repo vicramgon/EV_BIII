@@ -1,18 +1,33 @@
 #!/bin/bash
-for eop in EOP1 EOP2 EOP3
+for eop in CMOEAD_ADAPT CMOEAD_THRES
     do
         for n in 100 40 200
             do
-                ./proofAllGenAllSeedsEOP.sh $n $(( 10000/$n )) $eop
+                ./proofAllGenAllSeedsEOP.sh $n $(( 10000/$n )) $(((10*$n)/100)) $eop CF6_4D
             done
     done
-
-for eop in EOP1 EOP2 EOP3
+    
+for eop in CMOEAD_ADAPT CMOEAD_THRES
     do
-        for n in 40 80 100
+        for n in 40 80 100 
             do
-                ./proofAllGenAllSeedsEOP.sh $n $(( 4000/$n )) $eop
+                ./proofAllGenAllSeedsEOP.sh $n $(( 4000/$n )) $(((10*$n)/100)) $eop CF6_4D
             done
     done
-
-rm zdt3_EOP*
+    
+for eop in CMOEAD_ADAPT CMOEAD_THRES
+    do
+        for n in 100 40 200
+            do
+                ./proofAllGenAllSeedsEOP.sh $n $(( 10000/$n )) $(((12*$n)/100)) $eop CF6_16D
+            done
+    done
+    
+for eop in CMOEAD_ADAPT CMOEAD_THRES
+    do
+        for n in 40 80 100 
+            do
+                ./proofAllGenAllSeedsEOP.sh $n $(( 4000/$n )) $(((12*$n)/100)) $eop CF6_16D
+            done
+    done
+    

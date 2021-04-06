@@ -95,6 +95,7 @@ def prepareDir(path):
 
 plotColor1 = np.vectorize(lambda x: 'red' if x else 'green')
 plotColor2 = np.vectorize(lambda x: 'purple' if x else 'gold')
+plotColor3 = np.vectorize(lambda x: 'fuchsia' if x else 'turquoise')
 
 #%%
 '''
@@ -290,3 +291,89 @@ for N,G in [(100, 100), (40,250),(200,50),(40,100),(80,50),(100,40)]:
                         hspace=0.35)
         fig.savefig(f"{plotsDirPath}/s{seed}_comp.png", dpi=600)
         plt.clf(); plt.close()
+        
+        
+plotColors= [plotColor1, plotColor2, plotColor3]
+# = np.vectorize(lambda x: 'red' if x else 'green')
+# plotColor2 = np.vectorize(lambda x: 'purple' if x else 'gold')
+# plotColor3 = np.vectorize(lambda x: 'fuchsia' if x else 'turquoise')
+
+PROOFS = [(100, 100), (40,250),(200,50)]
+
+for seed in list(range(9)) + [98]:
+    fig, ax1 = plt.subplots()
+    ax1.scatter(CF6_PF_x[0], CF6_PF_y[0], s=1, color='black')
+    ax1.scatter(CF6_PF_x[1], CF6_PF_y[1], s=1, color='black')
+    ax1.scatter(CF6_PF_x[2], CF6_PF_y[2], s=1, color='black')
+    for i, (N,G) in enumerate(PROOFS):
+        T = T=(10*N)//100
+        data = np.genfromtxt(f"CMOEAD_ADAPT/CF6_16D/EVAL{N*G}/N{N}_G{G}_T{T}/outputs/s{seed+1}_gen{G-1}.out", delimiter='\t')
+        ax1.scatter(data[:,0], data[:,1], c=plotColors[i](data[:,2]), s=1, marker = '.')
+    
+    legend_elements = [  
+          Line2D([0], [0], marker='o', color='w', label='feas. N100G100',
+                          markerfacecolor='green', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='infeas. N100G100',
+                          markerfacecolor='red', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='feas. N40G250',
+                          markerfacecolor='gold', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='infeas. N40G250',
+                          markerfacecolor='purple', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='feas. N200G50',
+                          markerfacecolor='turquoise', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='infeas. N200G50',
+                          markerfacecolor='fuchsia', markersize=5)]
+    ax1.legend(handles=legend_elements)
+    fig.suptitle(f" CMOVEAD COMPARISION FGEN CF6_16D 10000EV s{seed+1}\n")
+    ax1.set_xlabel('$f_1$', fontsize=11)
+    ax1.set_ylabel('$f_2$', fontsize=11)
+    ax1.grid(True)
+    plt.subplots_adjust(left=0.125,
+                    bottom=0.125, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0.35, 
+                    hspace=0.35)
+    if not(os.path.isdir(f"CMOEAD_ADAPT/CF6_16D/EVAL10000/COMP_PLOTS")):
+        os.mkdir(f"CMOEAD_ADAPT/CF6_16D/EVAL10000/COMP_PLOTS")
+    fig.savefig(f"CMOEAD_ADAPT/CF6_16D/EVAL10000/COMP_PLOTS/s{seed+1}_FGEN.png", dpi=600)
+    plt.clf(); plt.close()
+    
+    
+    fig, ax1 = plt.subplots()
+    ax1.scatter(CF6_PF_x[0], CF6_PF_y[0], s=1, color='black')
+    ax1.scatter(CF6_PF_x[1], CF6_PF_y[1], s=1, color='black')
+    ax1.scatter(CF6_PF_x[2], CF6_PF_y[2], s=1, color='black')
+    for i, (N,G) in enumerate(PROOFS):
+        T = T=(10*N)//100
+        data = np.genfromtxt(f"CMOEAD_ADAPT/CF6_16D/EVAL{N*G}/N{N}_G{G}_T{T}/outputs/s{seed+1}_nds.out", delimiter='\t')
+        ax1.scatter(data[:,0], data[:,1], c=plotColors[i](data[:,2]), s=1, marker = '.', alpha=0.5)
+    
+    legend_elements = [  
+          Line2D([0], [0], marker='o', color='w', label='feas. N100G100',
+                          markerfacecolor='green', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='infeas. N100G100',
+                          markerfacecolor='red', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='feas. N40G250',
+                          markerfacecolor='gold', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='infeas. N40G250',
+                          markerfacecolor='purple', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='feas. N200G50',
+                          markerfacecolor='turquoise', markersize=5),
+          Line2D([0], [0], marker='o', color='w', label='infeas. N200G50',
+                          markerfacecolor='fuchsia', markersize=5)]
+    ax1.legend(handles=legend_elements)
+    fig.suptitle(f" CMOVEAD COMPARISION NDS CF6_16D 10000EV s{seed+1}\n")
+    ax1.set_xlabel('$f_1$', fontsize=11)
+    ax1.set_ylabel('$f_2$', fontsize=11)
+    ax1.grid(True)
+    plt.subplots_adjust(left=0.125,
+                    bottom=0.125, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0.35, 
+                    hspace=0.35)
+    if not(os.path.isdir(f"CMOEAD_ADAPT/CF6_16D/EVAL10000/COMP_PLOTS")):
+        os.mkdir(f"CMOEAD_ADAPT/CF6_16D/EVAL10000/COMP_PLOTS")
+    fig.savefig(f"CMOEAD_ADAPT/CF6_16D/EVAL10000/COMP_PLOTS/s{seed+1}_NDS.png", dpi=600)
+    plt.clf(); plt.close()

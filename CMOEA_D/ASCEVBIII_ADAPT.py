@@ -57,7 +57,7 @@ def EOP1(i, P, VP, Bi, searchSpace, Fs=[0.5, 0.7], CRs=[0.5], SIG=20, pm=None, s
 # MOEA/D IMPLEMENTATION #
 #########################
 '''
-def CMOEAD(goals, constraints, searchSpace, N, G, T, eop=EOP1, updationsNumber=None, seed=None, lambdaInput=None, outputDirPath='./results'):
+def CMOEAD(goals, constraints, searchSpace, N, G, T, eop=EOP1, updationsNumber=None, NDS=True, seed=None, lambdaInput=None, outputDirPath='./results'):
     def dominates(a, va, b, vb):
         nonlocal m
         if va<vb:
@@ -154,13 +154,13 @@ def CMOEAD(goals, constraints, searchSpace, N, G, T, eop=EOP1, updationsNumber=N
     z = np.apply_along_axis(np.min, 0, FP)
     
     ## We initialize the non dominated solutions
-
-    NDS_P= []
-    NDS_F= []
-    NDS_V= []
-    for i in range(N):
-        NDS_P, NDS_F, NDS_V = updateNDS(NDS_P, NDS_F, NDS_V, P[i], FP[i], VP[i])
-    del i
+    if NDS:
+        NDS_P= []
+        NDS_F= []
+        NDS_V= []
+        for i in range(N):
+            NDS_P, NDS_F, NDS_V = updateNDS(NDS_P, NDS_F, NDS_V, P[i], FP[i], VP[i])
+        del i
     
     
    
@@ -191,7 +191,8 @@ def CMOEAD(goals, constraints, searchSpace, N, G, T, eop=EOP1, updationsNumber=N
             z = np.minimum(z, fy)
             
             # UPDATE NDS
-            NDS_P, NDS_F, NDS_V = updateNDS(NDS_P, NDS_F, NDS_V, y, fy, vy)
+            if NDS:
+                NDS_P, NDS_F, NDS_V = updateNDS(NDS_P, NDS_F, NDS_V, y, fy, vy)
             
             updations = 0
             ETA = 10**((it+1)/G)
@@ -228,9 +229,11 @@ def CMOEAD(goals, constraints, searchSpace, N, G, T, eop=EOP1, updationsNumber=N
                 writeVP[:,-1] = (-1)*(VP)
                 np.savetxt(resFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
                 np.savetxt(allGenFile,writeVP, delimiter="\t", newline='\n', header='', footer='')
+    if NDS:
+        with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}nds.out", "wb") as ndsFile:
+            writeNDS = np.zeros([len(NDS_P),m+1])
+            writeNDS[:,:-1] = np.array(NDS_F)
+            writeNDS[:,-1] = (-1)*np.array(NDS_V)
+            np.savetxt(ndsFile, writeNDS, delimiter="\t", newline='\n', header='', footer='')
+
     
-    with open(f"{outputDirPath}/{'' if seed is None else 's' + str(seed) + '_'}nds.out", "wb") as ndsFile:
-        writeNDS = np.zeros([len(NDS_P),m+1])
-        writeNDS[:,:-1] = np.array(NDS_F)
-        writeNDS[:,-1] = (-1)*np.array(NDS_V)
-        np.savetxt(ndsFile, writeNDS, delimiter="\t", newline='\n', header='', footer='')
